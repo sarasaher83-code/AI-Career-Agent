@@ -3,3 +3,9 @@ private/
 *.env
 .env*
 !.env.example
+
+# Python / tooling
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/

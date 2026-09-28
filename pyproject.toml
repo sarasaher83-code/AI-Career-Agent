@@ -1,0 +1,8 @@
+[project]
+name = "executive-career-agent"
+version = "0.1.0"
+description = "Locally hosted executive career intelligence and LinkedIn personal-branding assistant"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

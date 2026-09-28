@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Career Intelligence{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-mark">◆</span>
+        <div><div class="brand-name">Career Intelligence</div><div class="brand-sub">Executive Suite</div></div>
+      </div>
+      <nav>
+        <div class="nav-label">Dashboard</div>
+        {% for key, label, href, stage in sections %}
+          <a class="nav-item{% if key == active %} active{% endif %}" href="{{ href }}">
+            <span>{{ label }}</span>{% if stage %}<span class="stage">{{ stage }}</span>{% endif %}
+          </a>
+        {% endfor %}
+        <div class="nav-label">Controls</div>
+        {% for key, label, href in tools %}
+          <a class="nav-item{% if key == active %} active{% endif %}" href="{{ href }}"><span>{{ label }}</span></a>
+        {% endfor %}
+      </nav>
+      <div class="sidebar-foot">Local &amp; private · runs on this computer only</div>
+    </aside>
+    <main class="content">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</body>
+</html>

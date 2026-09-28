@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Overview · Career Intelligence{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div class="eyebrow">Executive Career Overview</div>
+  {% if profile %}
+    <h1>{{ profile.name }}</h1>
+    <p class="lede">{{ profile.current_role.title }} · {{ profile.current_role.employer }}</p>
+  {% else %}
+    <h1>Welcome</h1>
+    <p class="lede">Place your master profile in the private folder to begin.</p>
+  {% endif %}
+</header>
+
+{% if profile %}
+{% set m = profile.raw.headline_metrics %}
+<section class="stats">
+  <div class="stat"><div class="stat-value">{{ m.years_experience }}</div><div class="stat-label">Years in architecture &amp; design</div></div>
+  <div class="stat"><div class="stat-value">{{ m.mena_projects_responsible }}</div><div class="stat-label">Projects under design management</div></div>
+  <div class="stat"><div class="stat-value">{{ m.mena_sqm_responsible }}</div><div class="stat-label">sqm under responsibility</div></div>
+  <div class="stat"><div class="stat-value">{{ m.mena_residential_units }}</div><div class="stat-label">Residential units</div></div>
+</section>
+{% endif %}
+
+<section class="grid-2">
+  <div class="card">
+    <h2>System readiness</h2>
+    <ul class="checklist">
+      {% for label, ok, detail in checklist %}
+        <li class="{{ 'ok' if ok else 'todo' }}">
+          <span class="dot" aria-hidden="true"></span>
+          <div><div class="check-label">{{ label }}</div><div class="check-detail">{{ detail }}</div></div>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="card">
+    <h2>Recent activity</h2>
+    <table class="table compact">
+      <tbody>
+      {% for e in events %}
+        <tr><td class="muted nowrap">{{ e.ts[:16].replace('T', ' ') }}</td><td>{{ e.action }}</td><td class="muted">{{ e.actor }}</td></tr>
+      {% else %}
+        <tr><td class="muted">No activity yet.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <a class="link" href="/audit">Full audit log →</a>
+  </div>
+</section>
+
+<section class="card note">
+  <h2>How this system behaves</h2>
+  <p>It prepares drafts only. It never applies, posts, comments, connects or messages on your behalf.
+     Every draft is checked against your verified profile and needs your approval, and you perform each external action yourself.</p>
+</section>
+{% endblock %}

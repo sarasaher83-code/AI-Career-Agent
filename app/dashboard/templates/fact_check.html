@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Fact Checker · Career Intelligence{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div class="eyebrow">Controls</div>
+  <h1>Fact Checker</h1>
+  <p class="lede">Paste any text (a CV section, cover letter or LinkedIn draft). It is compared with your verified master profile.
+     Every generated document passes through this same check before it can be approved.</p>
+</header>
+<form method="post" action="/fact-check" class="card">
+  <label for="text" class="field-label">Text to check</label>
+  <textarea id="text" name="text" rows="10" dir="auto">{{ text }}</textarea>
+  <button type="submit" class="btn">Check text</button>
+</form>
+{% if error %}<div class="card alert">{{ error }}</div>{% endif %}
+{% if result %}
+<section class="card">
+  {% if result.passed and not result.warnings %}
+    <div class="verdict pass">Passed: nothing unsupported found.</div>
+  {% elif result.passed %}
+    <div class="verdict warn">Passed with {{ result.warnings|length }} warning(s).</div>
+  {% else %}
+    <div class="verdict fail">Blocked: {{ result.blocking|length }} issue(s) must be fixed.</div>
+  {% endif %}
+  {% if result.violations %}
+  <table class="table">
+    <thead><tr><th>Severity</th><th>Rule</th><th>Where</th><th>Why</th></tr></thead>
+    <tbody>
+    {% for v in result.violations %}
+      <tr><td><span class="pill {{ v.severity }}">{{ v.severity }}</span></td><td>{{ v.rule.replace('_', ' ') }}</td>
+          <td class="excerpt">{{ v.excerpt }}</td><td>{{ v.message }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

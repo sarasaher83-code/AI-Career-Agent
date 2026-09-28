@@ -1,2 +1,37 @@
 # AI-Career-Agent
-AI-powered Executive Job Search &amp; LinkedIn Personal Branding Agent
+
+AI-powered executive job search and LinkedIn personal-branding assistant. It runs locally on your own computer.
+
+- **Prepares, never acts:** it drafts applications and LinkedIn content, and you approve and perform every external action yourself.
+- **Verified facts only:** every draft is checked against a locked master profile before it can be approved.
+- **Private by design:** personal data stays in the git-ignored `private/` folder, and LinkedIn credentials are never used.
+
+## Quick start (Windows)
+
+See **[docs/SETUP_WINDOWS.md](docs/SETUP_WINDOWS.md)**. In short: install Python, add `private/master_profile.json`,
+put your Claude API key in `.env`, then double-click `start.bat`.
+
+## Documentation
+
+| Document | Contents |
+|---|---|
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Design principles, modules, job sources, matching model, security, costs, build stages |
+| [docs/SETUP_WINDOWS.md](docs/SETUP_WINDOWS.md) | Step-by-step installation and API-key setup |
+| [docs/TEST_REPORT.md](docs/TEST_REPORT.md) | Test results per build stage |
+
+## Build status
+
+| Stage | Scope | Status |
+|---|---|---|
+| S0 | Foundation: settings, audit log, approval workflow, profile loader, fact checker, dashboard shell, launcher | ✅ Complete |
+| S1 | Job discovery | Next |
+| S2–S8 | Matching, dashboard, applications, LinkedIn, content, analytics, handover | Planned |
+
+## For developers
+
+```bash
+pip install -r requirements-dev.txt
+git config core.hooksPath .githooks   # blocks commits of private data or secrets
+pytest
+python run.py                         # http://127.0.0.1:8000
+```

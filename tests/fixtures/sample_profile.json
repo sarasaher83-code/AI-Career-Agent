@@ -1,0 +1,55 @@
+{
+  "_meta": {
+    "status": "LOCKED - fictional test profile",
+    "forbidden_phrases": ["500,000 sqm", "Design Director"]
+  },
+  "identity": {
+    "name": "Test Candidate",
+    "email": "candidate@example.com",
+    "phone": "+00 000 000 9999",
+    "languages": [{"language": "Arabic", "level": "Native"}, {"language": "English", "level": "Professional fluency"}]
+  },
+  "private_preferences": {
+    "salary_floor_usd_monthly": {"gcc_relocation": 7777}
+  },
+  "headline_metrics": {
+    "years_experience": "18+",
+    "projects_responsible": 12,
+    "sqm_responsible": "90,000+",
+    "cities": ["Riyadh"]
+  },
+  "experience": [
+    {
+      "title": "Head of Design Management",
+      "employer": "Example Developments",
+      "location": "Riyadh, Saudi Arabia",
+      "start": "2022-01", "end": null,
+      "reports_to": "CEO",
+      "employer_profile": "Developer established in 2001 with 40,000 sqm delivered.",
+      "direct_team": "5 design engineers",
+      "highlights": [
+        "Founded the design management function.",
+        "Responsible for 12 residential projects totalling 90,000+ sqm."
+      ]
+    },
+    {
+      "title": "Technical Office Manager",
+      "employer": "Sample Contracting",
+      "location": "Egypt",
+      "start": "2018-03", "end": "2021-12",
+      "highlights": ["Led a technical office team of 8 engineers."]
+    }
+  ],
+  "projects": [
+    {"name": "Harbour Tower", "location": "Riyadh", "status": "Pipeline", "desc": "30-storey residential tower"}
+  ],
+  "excluded_content": {"unsupported_figures": ["1,234 units"]},
+  "education": [
+    {"degree": "M.Sc. Architecture", "institution": "Example University", "start": 2010, "end": 2014}
+  ],
+  "certifications_and_training": [
+    {"name": "Project Management Diploma", "issuer": "Example Training", "date": "2015"}
+  ],
+  "skills": {"technical": ["AutoCAD", "ArcGIS"]},
+  "thought_leadership": [{"title": "Design Management Manual", "year": 2025}]
+}

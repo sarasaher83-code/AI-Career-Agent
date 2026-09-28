@@ -1,0 +1,5 @@
+# Personal career data: never commit (this repository is public)
+private/
+*.env
+.env*
+!.env.example

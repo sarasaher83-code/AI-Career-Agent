@@ -15,6 +15,7 @@ put your Claude API key in `.env`, then double-click `start.bat`.
 
 | Document | Contents |
 |---|---|
+| [docs/CLOUD_DESK.md](docs/CLOUD_DESK.md) | The cloud setup in use: private Career Desk page, daily Job Scout and weekly Growth Report runs, apply step |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Design principles, modules, job sources, matching model, security, costs, build stages |
 | [docs/SETUP_WINDOWS.md](docs/SETUP_WINDOWS.md) | Step-by-step installation and API-key setup |
 | [docs/JOB_ALERTS_SETUP.md](docs/JOB_ALERTS_SETUP.md) | Creating job alerts on LinkedIn, Bayt, GulfTalent, Naukrigulf and Indeed |

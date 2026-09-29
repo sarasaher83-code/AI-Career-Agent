@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from fastapi import APIRouter, Form, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from app.config.settings import mask_secret
@@ -17,7 +17,7 @@ router = APIRouter()
 # The ten dashboard sections from the brief, with the build stage that delivers each one.
 SECTIONS = [
     ("overview", "Executive Career Overview", "/", None),
-    ("discovery", "Job Discovery", "/section/discovery", "S1"),
+    ("discovery", "Job Discovery", "/discovery", None),
     ("matching", "Job Matching", "/section/matching", "S2"),
     ("pipeline", "Application Pipeline", "/section/pipeline", "S3"),
     ("cv-library", "Tailored CV Library", "/section/cv-library", "S4"),
@@ -64,6 +64,8 @@ def section_placeholder(request: Request, key: str):
     section = next((s for s in SECTIONS if s[0] == key), None)
     if section is None:
         return HTMLResponse("Not found", status_code=404)
+    if section[3] is None:                       # section already built: go to the real page
+        return RedirectResponse(section[2], status_code=307)
     return _render(request, "placeholder.html", key, section=section)
 
 

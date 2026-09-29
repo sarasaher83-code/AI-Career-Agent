@@ -17,6 +17,7 @@ put your Claude API key in `.env`, then double-click `start.bat`.
 |---|---|
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Design principles, modules, job sources, matching model, security, costs, build stages |
 | [docs/SETUP_WINDOWS.md](docs/SETUP_WINDOWS.md) | Step-by-step installation and API-key setup |
+| [docs/JOB_ALERTS_SETUP.md](docs/JOB_ALERTS_SETUP.md) | Creating job alerts on LinkedIn, Bayt, GulfTalent, Naukrigulf and Indeed |
 | [docs/TEST_REPORT.md](docs/TEST_REPORT.md) | Test results per build stage |
 
 ## Build status
@@ -24,8 +25,9 @@ put your Claude API key in `.env`, then double-click `start.bat`.
 | Stage | Scope | Status |
 |---|---|---|
 | S0 | Foundation: settings, audit log, approval workflow, profile loader, fact checker, dashboard shell, launcher | ✅ Complete |
-| S1 | Job discovery | Next |
-| S2–S8 | Matching, dashboard, applications, LinkedIn, content, analytics, handover | Planned |
+| S1 | Job discovery: Gmail alert import (read-only), .eml upload, public career-page feeds, manual entry, de-duplication, filters, CSV/Excel export | ✅ Complete |
+| S2 | Transparent job matching | Next |
+| S3–S8 | Dashboard, applications, LinkedIn, content, analytics, handover | Planned |
 
 ## For developers
 

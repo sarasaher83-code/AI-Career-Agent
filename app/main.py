@@ -9,8 +9,11 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from app.config.settings import Settings
+from app.dashboard.discovery import router as discovery_router
 from app.dashboard.routes import router
 from app.db import connect
+from app.ingestion.pipeline import CareerBoards
+from app.ingestion.store import VacancyStore
 from app.profile.loader import ProfileError, load_profile
 from app.security.approvals import ApprovalQueue
 from app.security.audit import AuditLog
@@ -29,6 +32,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         app.state.conn = conn
         app.state.audit = audit
         app.state.approvals = ApprovalQueue(conn, audit)
+        app.state.vacancies = VacancyStore(conn)
+        app.state.boards = CareerBoards(conn)
         try:
             app.state.profile = load_profile(settings.profile_path)
             app.state.profile_error = None
@@ -48,6 +53,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app = FastAPI(title="Executive Career Intelligence", lifespan=lifespan)
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
     app.include_router(router)
+    app.include_router(discovery_router)
     return app
 
 

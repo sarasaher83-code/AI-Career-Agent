@@ -109,3 +109,44 @@ textarea:focus { outline: 2px solid var(--gold-soft); border-color: var(--gold);
   .grid-2 { grid-template-columns: 1fr; }
   h1 { font-size: 28px; }
 }
+
+/* Stage S1: discovery */
+.flash { background: var(--gold-soft); border-color: var(--gold); }
+.small { font-size: 13px; }
+.actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 20px; }
+.action-card { background: var(--paper); border: 1px solid var(--grey-200); border-radius: var(--radius); padding: 16px 18px;
+               display: flex; flex-direction: column; gap: 8px; min-width: 0; color: var(--ink); text-decoration: none; }
+.action-title { font-weight: 600; }
+.link-card:hover { border-color: var(--gold); }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.btn.small { margin-top: 0; padding: 7px 14px; font-size: 14px; }
+.btn:disabled { background: var(--grey-400); cursor: not-allowed; }
+.btn-link { background: none; border: 0; color: var(--fail); cursor: pointer; font: inherit; font-size: 13px; }
+input, select { font: inherit; border: 1px solid var(--grey-200); border-radius: 8px; padding: 8px 10px; background: var(--white);
+                min-width: 0; max-width: 100%; }
+input[type=file] { border: 0; padding: 0; background: none; }
+details summary { cursor: pointer; }
+.form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 16px; }
+.form-grid label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; }
+.form-grid .span-2 { grid-column: 1 / -1; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; }
+.filters input[name=q] { flex: 1 1 220px; }
+.filters .link { margin-top: 0; }
+.spacer { flex: 1; }
+.inline { margin: 0; }
+.inline select { padding: 4px 6px; font-size: 13px; }
+.title-link { color: var(--ink); text-decoration: none; font-weight: 600; }
+.title-link:hover { color: var(--gold-deep); }
+tr.dim td { opacity: .5; }
+.pill.neutral { background: var(--grey-100); color: var(--grey-600); }
+.facts { display: grid; grid-template-columns: max-content 1fr; gap: 8px 16px; margin: 0 0 16px; }
+.facts dt { color: var(--grey-600); font-size: 13px; }
+.facts dd { margin: 0; }
+.prose { white-space: pre-wrap; max-width: 80ch; }
+a.btn { display: inline-block; text-decoration: none; }
+
+@media (max-width: 900px) {
+  .actions { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+  .facts { grid-template-columns: 1fr; }
+}

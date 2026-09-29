@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Career Pages · Career Intelligence{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div class="eyebrow"><a class="link" href="/discovery">← Job Discovery</a></div>
+  <h1>Career pages watch-list</h1>
+  <p class="lede">Some employers publish their vacancies through a public job feed ({{ systems|join(', ') }}).
+     Add an employer here and its feed is checked when you press <em>Check now</em>. No login is used or needed.</p>
+</header>
+{% if message %}<div class="card flash">{{ message }}</div>{% endif %}
+<section class="card">
+  <form method="post" action="/discovery/boards/add" class="form-grid">
+    <label>Employer name<input name="employer" required placeholder="e.g. Example Developments"></label>
+    <label>Career-page system<select name="ats">{% for s in systems %}<option value="{{ s }}">{{ s|capitalize }}</option>{% endfor %}</select></label>
+    <label class="span-2">Board name <span class="muted small">(the last part of the careers link, e.g. <em>example</em> in boards.greenhouse.io/example)</span><input name="token" required></label>
+    <div class="span-2"><button class="btn">Add to watch-list</button></div>
+  </form>
+</section>
+<section class="card">
+  <form method="post" action="/discovery/boards/check"><button class="btn small">Check now</button></form>
+  <div class="table-wrap">
+  <table class="table">
+    <thead><tr><th>Employer</th><th>System</th><th>Board</th><th>Last checked</th><th>Result</th><th></th></tr></thead>
+    <tbody>
+    {% for b in boards %}
+      <tr><td>{{ b.employer }}</td><td>{{ b.ats|capitalize }}</td><td class="muted">{{ b.token }}</td>
+          <td class="nowrap muted">{{ (b.last_checked or '')[:16].replace('T', ' ') }}</td><td>{{ b.last_result or '' }}</td>
+          <td><form method="post" action="/discovery/boards/{{ b.id }}/remove"><button class="btn-link">Remove</button></form></td></tr>
+    {% else %}
+      <tr><td colspan="6" class="muted">No employers yet.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+{% endblock %}

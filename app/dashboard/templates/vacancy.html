@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}{{ v.title }} · Career Intelligence{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div class="eyebrow"><a class="link" href="/discovery">← Job Discovery</a></div>
+  <h1>{{ v.title }}</h1>
+  <p class="lede">{{ v.employer }} · {{ v.city or '' }}{% if v.city and v.country %}, {% endif %}{{ v.country }}</p>
+</header>
+<section class="grid-2">
+  <div class="card">
+    <h2>Vacancy details</h2>
+    <dl class="facts">
+      <dt>Published</dt><dd>{{ v.published_date or 'Not stated' }}</dd>
+      <dt>Application deadline</dt><dd>{{ v.deadline or 'Not stated' }}</dd>
+      <dt>Salary</dt><dd>{{ v.salary_text or 'Not disclosed' }}</dd>
+      <dt>Experience required</dt><dd>{% if v.experience_min is not none %}{{ v.experience_min }}{% if v.experience_max %}–{{ v.experience_max }}{% else %}+{% endif %} years{% else %}Not stated{% endif %}</dd>
+      <dt>Qualifications</dt><dd>{{ v.qualifications or 'Not stated' }}</dd>
+      <dt>Location as advertised</dt><dd>{{ v.location_raw or 'Not stated' }}</dd>
+    </dl>
+    {% if v.apply_url %}<a class="btn" href="{{ v.apply_url }}" target="_blank" rel="noopener noreferrer">Open job page ↗</a>
+    <p class="muted small">Opens the public job page. The system never applies on your behalf.</p>{% endif %}
+  </div>
+  <div class="card">
+    <h2>Status &amp; sources</h2>
+    <form method="post" action="/discovery/{{ v.id }}/status" class="row">
+      <input type="hidden" name="back" value="/discovery/{{ v.id }}">
+      <select name="status" aria-label="Status">{% for s in statuses %}<option value="{{ s }}" {% if v.status == s %}selected{% endif %}>{{ s|capitalize }}</option>{% endfor %}</select>
+      <button class="btn small">Save</button>
+    </form>
+    <table class="table compact">
+      <thead><tr><th>Source</th><th>Seen</th></tr></thead>
+      <tbody>{% for s in v.source_records %}<tr><td>{{ s.source.replace('_', ' ') }}</td><td class="muted">{{ s.seen_at[:10] }}</td></tr>{% endfor %}</tbody>
+    </table>
+    <p class="muted small">First seen {{ v.first_seen[:10] }} · last seen {{ v.last_seen[:10] }}</p>
+  </div>
+</section>
+<section class="card">
+  <h2>Job description</h2>
+  {% if v.description %}<div class="prose" dir="auto">{{ v.description }}</div>
+  {% else %}<p class="muted">The alert email contained only the listing summary. Open the job page and paste the description
+     (Add a vacancy manually, same title and employer) so stage S2 can score it in full.</p>{% endif %}
+</section>
+{% endblock %}

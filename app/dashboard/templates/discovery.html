@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Job Discovery · Career Intelligence{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div class="eyebrow">Job Discovery</div>
+  <h1>Vacancies</h1>
+  <p class="lede">{{ counts.total }} vacancies from legitimate sources: your job-alert emails, public career pages and your own entries.
+     Duplicates are merged automatically. Match scores arrive in stage S2.</p>
+</header>
+
+{% if message %}<div class="card flash">{{ message }}</div>{% endif %}
+
+<section class="actions">
+  <form method="post" action="/discovery/import-gmail" class="action-card">
+    <div class="action-title">Import from Gmail</div>
+    <div class="muted small">{% if gmail_ready %}Reads job-alert emails (read-only).{% else %}Needs the Gmail app password in .env.{% endif %}</div>
+    <div class="row">
+      <select name="days" aria-label="Period"><option value="3">Last 3 days</option><option value="14" selected>Last 14 days</option><option value="30">Last 30 days</option></select>
+      <button class="btn small" {% if not gmail_ready %}disabled{% endif %}>Import</button>
+    </div>
+  </form>
+  <form method="post" action="/discovery/upload" enctype="multipart/form-data" class="action-card">
+    <div class="action-title">Upload an alert email</div>
+    <div class="muted small">In Gmail: open the email → ⋮ → Download message (.eml)</div>
+    <div class="row"><input type="file" name="file" accept=".eml" required><button class="btn small">Upload</button></div>
+  </form>
+  <a href="/discovery/boards" class="action-card link-card">
+    <div class="action-title">Career pages watch-list</div>
+    <div class="muted small">Employers whose public job feeds are checked</div>
+    <div class="link">Manage →</div>
+  </a>
+</section>
+
+<details class="card">
+  <summary><strong>Add a vacancy manually</strong> <span class="muted small">(paste from any job page)</span></summary>
+  <form method="post" action="/discovery/manual" class="form-grid">
+    <label>Job title<input name="title" required></label>
+    <label>Employer<input name="employer" required></label>
+    <label>Location<input name="location" placeholder="e.g. Riyadh - Saudi Arabia"></label>
+    <label>Public job link<input name="url" type="url" placeholder="https://…"></label>
+    <label>Experience<input name="experience" placeholder="e.g. 12 - 15 Years"></label>
+    <label>Application deadline<input name="deadline" type="date"></label>
+    <label>Salary (if stated)<input name="salary"></label>
+    <label class="span-2">Job description<textarea name="description" rows="6" dir="auto"></textarea></label>
+    <div class="span-2"><button class="btn">Add vacancy</button></div>
+  </form>
+</details>
+
+<section class="card">
+  <form method="get" action="/discovery" class="filters">
+    <input name="q" value="{{ filters.q }}" placeholder="Search title or employer" aria-label="Search">
+    <select name="country" aria-label="Country"><option value="">All countries</option>
+      {% for code, name in countries %}<option value="{{ code }}" {% if filters.country == code %}selected{% endif %}>{{ name }}</option>{% endfor %}
+    </select>
+    <select name="status" aria-label="Status"><option value="">Any status</option>
+      {% for s in statuses %}<option value="{{ s }}" {% if filters.status == s %}selected{% endif %}>{{ s|capitalize }}</option>{% endfor %}
+    </select>
+    <select name="source" aria-label="Source"><option value="">All sources</option>
+      {% for s in sources %}<option value="{{ s }}" {% if filters.source == s %}selected{% endif %}>{{ s.replace('_', ' ') }}</option>{% endfor %}
+    </select>
+    <button class="btn small">Filter</button>
+    {% set qs = 'q=' ~ filters.q|urlencode ~ '&country=' ~ filters.country ~ '&status=' ~ filters.status ~ '&source=' ~ filters.source %}
+    <span class="spacer"></span>
+    <a class="link" href="/discovery/export/csv?{{ qs }}">Export CSV</a>
+    <a class="link" href="/discovery/export/xlsx?{{ qs }}">Export Excel</a>
+  </form>
+
+  <div class="table-wrap">
+  <table class="table">
+    <thead><tr><th>Job title</th><th>Employer</th><th>Location</th><th>Experience</th><th>Published</th><th>Source</th><th>Status</th></tr></thead>
+    <tbody>
+    {% for v in rows %}
+      <tr class="{{ 'dim' if v.status == 'dismissed' }}">
+        <td><a class="title-link" href="/discovery/{{ v.id }}">{{ v.title }}</a>{% if v.easy_apply %} <span class="pill neutral">Easy Apply</span>{% endif %}</td>
+        <td>{{ v.employer }}</td>
+        <td class="nowrap">{{ v.city or '' }}{% if v.city and v.country %}, {% endif %}{{ v.country }}</td>
+        <td class="nowrap">{% if v.experience_min is not none %}{{ v.experience_min }}{% if v.experience_max %}–{{ v.experience_max }}{% else %}+{% endif %} yrs{% endif %}</td>
+        <td class="nowrap">{{ v.published_date or '' }}</td>
+        <td class="muted small">{{ v.sources.replace('_', ' ') }}</td>
+        <td>
+          <form method="post" action="/discovery/{{ v.id }}/status" class="inline">
+            <input type="hidden" name="back" value="/discovery?{{ qs }}">
+            <select name="status" onchange="this.form.submit()" aria-label="Status">
+              {% for s in statuses %}<option value="{{ s }}" {% if v.status == s %}selected{% endif %}>{{ s|capitalize }}</option>{% endfor %}
+            </select>
+          </form>
+        </td>
+      </tr>
+    {% else %}
+      <tr><td colspan="7" class="muted">No vacancies yet. Import your alert emails or add one manually.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+{% endblock %}

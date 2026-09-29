@@ -1,0 +1,441 @@
+<title>Sara Career Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: one column "desk" — a quiet header, a tab rail, then cards per job like an architect's issue register.
+   Palette from the brief: white, warm off-white, greys, matte gold, black type. */
+:root {
+  --bg: #FFFFFF;
+  --paper: #F8F6F1;
+  --line: #E5E1D8;
+  --muted: #6E6A62;
+  --ink: #151412;
+  --gold: #A3864D;
+  --gold-soft: #F0E8D6;
+  --ok: #3F6B45;  --ok-soft: #E7F0E6;
+  --warn: #8F6B1C; --warn-soft: #F6EDD3;
+  --bad: #8E3B34;  --bad-soft: #F5E4E1;
+  --display: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141311; --paper: #1C1B18; --line: #2F2D28; --muted: #A39E93; --ink: #F1EEE7;
+    --gold: #C9AA6B; --gold-soft: #2E281C;
+    --ok: #8CC08F; --ok-soft: #1E2A1F; --warn: #DDB864; --warn-soft: #2D2717; --bad: #E39A92; --bad-soft: #2E1E1C;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141311; --paper: #1C1B18; --line: #2F2D28; --muted: #A39E93; --ink: #F1EEE7;
+  --gold: #C9AA6B; --gold-soft: #2E281C;
+  --ok: #8CC08F; --ok-soft: #1E2A1F; --warn: #DDB864; --warn-soft: #2D2717; --bad: #E39A92; --bad-soft: #2E1E1C;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--sans); }
+.wrap { max-width: 1040px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 64px; display: grid; gap: 22px; }
+header.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px;
+  border-bottom: 1px solid var(--line); padding-bottom: 18px; }
+.eyebrow { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--gold); }
+h1 { font: 600 40px/1.05 var(--display); margin: 4px 0 0; text-wrap: balance; }
+h2 { font: 600 24px/1.2 var(--display); margin: 0; text-wrap: balance; }
+h3 { font-size: 15px; margin: 0; }
+.sub { color: var(--muted); margin: 6px 0 0; max-width: 62ch; }
+.stats { display: flex; flex-wrap: wrap; gap: 8px 22px; font-variant-numeric: tabular-nums; }
+.stat b { display: block; font: 600 26px/1 var(--display); }
+.stat span { font-size: 12px; color: var(--muted); }
+nav.tabs { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid var(--line); }
+nav.tabs button { background: none; border: 0; border-bottom: 2px solid transparent; padding: 10px 14px; font: 500 14px var(--sans);
+  color: var(--muted); cursor: pointer; white-space: nowrap; }
+nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--gold); }
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.notice { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; }
+.notice.warn { background: var(--warn-soft); border-color: transparent; color: var(--ink); }
+.list { display: grid; gap: 14px; }
+.job { border: 1px solid var(--line); border-radius: 12px; background: var(--bg); padding: 18px 20px; display: grid; gap: 12px; min-width: 0; }
+.job-head { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: start; }
+.code { font: 500 12px var(--mono); color: var(--gold); border: 1px solid var(--gold); border-radius: 6px; padding: 2px 6px; }
+.job-title { font-weight: 600; font-size: 16px; }
+.meta { color: var(--muted); font-size: 13px; }
+.score { text-align: right; font-variant-numeric: tabular-nums; }
+.score b { font: 600 30px/1 var(--display); }
+.score small { display: block; font-size: 11px; color: var(--muted); }
+.bars { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 6px 18px; }
+.bar { display: grid; grid-template-columns: 1fr 34px; gap: 8px; align-items: center; font-size: 12px; }
+.bar .track { grid-column: 1 / -1; height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.bar .fill { height: 100%; background: var(--gold); }
+.bar .unk { background: repeating-linear-gradient(90deg, var(--muted) 0 4px, transparent 4px 8px); opacity: .5; height: 100%; }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px 22px; }
+.cols ul { margin: 4px 0 0; padding-left: 18px; }
+.cols li { margin: 2px 0; }
+.label { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btn { font: 600 14px var(--sans); border-radius: 8px; padding: 8px 14px; cursor: pointer; border: 1px solid var(--ink); background: var(--ink); color: var(--bg); }
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.btn.gold { background: var(--gold); border-color: var(--gold); color: var(--bg); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+a.link { color: var(--gold); text-decoration: none; font-weight: 500; }
+a.link:hover { text-decoration: underline; }
+.pill { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; border-radius: 999px; padding: 3px 9px; white-space: nowrap; }
+.s-shortlisted { background: var(--gold-soft); color: var(--gold); }
+.s-approved, .s-applying { background: var(--warn-soft); color: var(--warn); }
+.s-applied { background: var(--ok-soft); color: var(--ok); }
+.s-needs_you, .s-failed { background: var(--bad-soft); color: var(--bad); }
+.s-skipped, .s-dismissed { background: var(--paper); color: var(--muted); }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+th { text-align: left; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 600; padding: 10px 12px; border-bottom: 1px solid var(--line); background: var(--paper); }
+td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; }
+select, input, textarea { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-width: 0; max-width: 100%; }
+textarea { width: 100%; resize: vertical; }
+.draft { border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: grid; gap: 8px; min-width: 0; }
+.draft p { margin: 0; white-space: pre-wrap; }
+.quote { background: var(--paper); border-radius: 8px; padding: 10px 12px; }
+form.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; align-items: end; }
+form.grid label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
+.prose { max-width: 70ch; }
+.prose p { margin: 6px 0; }
+.hint { font-size: 12px; color: var(--muted); }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(20px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg);
+  padding: 10px 16px; border-radius: 8px; font-size: 14px; }
+@media (max-width: 560px) {
+  h1 { font-size: 32px; }
+  .job-head { grid-template-columns: auto 1fr; }
+  .score { grid-column: 1 / -1; text-align: left; display: flex; gap: 8px; align-items: baseline; }
+  .score small { display: inline; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Executive career desk · GCC</div>
+      <h1>Sara Saher El-Khoreby</h1>
+      <p class="sub" id="lede">Head of Design Management Operations &amp; Technical Office. Daily shortlist at 9 AM Cairo time, growth report Mondays at 7 PM.</p>
+    </div>
+    <div class="stats" id="stats" aria-live="polite"></div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Sections" id="tabs"></nav>
+  <main id="view" aria-live="polite">
+    <div class="notice">Loading your desk…</div>
+  </main>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+  const DAILY_CAP = 5;
+  const TABS = [
+    ["today", "Today"], ["pipeline", "Pipeline"], ["engagement", "Engagement"], ["growth", "Growth"], ["activity", "Activity"],
+  ];
+  const STATUS_LABEL = {
+    shortlisted: "Shortlisted", approved: "Approved to apply", applying: "Applying", applied: "Applied",
+    needs_you: "Needs you", skipped: "Skipped", dismissed: "Dismissed", failed: "Failed",
+  };
+  const DIMENSIONS = {
+    experience: "Experience", seniority: "Seniority", sector: "Sector", geography: "Location",
+    leadership: "Leadership", technical: "Technical", qualifications: "Qualifications", progression: "Progression",
+  };
+  const S = { db: null, owner: false, tab: "today", jobs: [], engagement: [], reports: [], runs: [], metrics: [],
+              profile: null, filter: { status: "", country: "" }, ready: false };
+
+  // ---------- helpers ----------
+  function h(tag, attrs, ...kids) {
+    const el = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs || {})) {
+      if (v === null || v === undefined || v === false) continue;
+      if (k === "class") el.className = v;
+      else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+      else el.setAttribute(k, v === true ? "" : v);
+    }
+    for (const kid of kids.flat()) {
+      if (kid === null || kid === undefined || kid === false) continue;
+      el.append(kid instanceof Node ? kid : document.createTextNode(String(kid)));
+    }
+    return el;
+  }
+  const today = () => new Date().toISOString().slice(0, 10);
+  const safeUrl = (u) => (typeof u === "string" && /^https:\/\//i.test(u)) ? u : null;
+  const place = (j) => [j.city, j.country].filter(Boolean).join(", ");
+  function toast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg; t.hidden = false;
+    clearTimeout(toast._t); toast._t = setTimeout(() => { t.hidden = true; }, 2600);
+  }
+  async function copy(text, done) {
+    try { await navigator.clipboard.writeText(text); toast(done || "Copied"); }
+    catch { toast("Copy was blocked. Select the text and copy it manually."); return false; }
+    return true;
+  }
+  const pill = (status) => h("span", { class: "pill s-" + status }, STATUS_LABEL[status] || status);
+
+  // ---------- data writes (one per action) ----------
+  async function setStatus(job, status, note) {
+    if (!S.db || !S.owner) return;
+    const history = Array.isArray(job.history) ? job.history.slice() : [];
+    history.push({ at: new Date().toISOString(), event: status, note: note || "" });
+    try {
+      await S.db.doc("jobs/" + job.id).update({ status, updated_at: new Date().toISOString(), history });
+      toast(STATUS_LABEL[status] + ": " + (job.code || job.id));
+    } catch (e) { toast("Could not save (" + (e && e.code || "error") + "). Try again."); }
+  }
+
+  // ---------- views ----------
+  function renderStats() {
+    const box = document.getElementById("stats");
+    const c = (st) => S.jobs.filter((j) => j.status === st).length;
+    const appliedToday = S.jobs.filter((j) => j.status === "applied" && (j.applied_at || "").slice(0, 10) === today()).length;
+    box.replaceChildren(
+      h("div", { class: "stat" }, h("b", {}, c("shortlisted")), h("span", {}, "waiting for you")),
+      h("div", { class: "stat" }, h("b", {}, c("approved") + c("applying")), h("span", {}, "approved to apply")),
+      h("div", { class: "stat" }, h("b", {}, c("applied")), h("span", {}, "applied")),
+      h("div", { class: "stat" }, h("b", {}, appliedToday + "/" + DAILY_CAP), h("span", {}, "applied today")),
+    );
+  }
+
+  function renderTabs() {
+    const nav = document.getElementById("tabs");
+    nav.replaceChildren(...TABS.map(([key, label]) => h("button", {
+      role: "tab", "aria-selected": String(S.tab === key), id: "tab-" + key,
+      onclick: () => { S.tab = key; try { history.replaceState(null, "", "#" + key); } catch {} render(); },
+    }, label)));
+  }
+
+  function breakdown(job) {
+    const rows = Array.isArray(job.breakdown) ? job.breakdown : [];
+    if (!rows.length) return null;
+    return h("div", { class: "bars" }, rows.map((r) => {
+      const known = typeof r.score === "number";
+      return h("div", { class: "bar", title: [r.evidence, r.vacancy_quote].filter(Boolean).join(" · ") },
+        h("span", {}, (DIMENSIONS[r.dimension] || r.dimension) + (r.weight ? " · " + r.weight + "%" : "")),
+        h("span", { class: "meta" }, known ? r.score : "?"),
+        h("div", { class: "track" }, known ? h("div", { class: "fill", style: "width:" + Math.max(0, Math.min(100, r.score)) + "%" })
+                                            : h("div", { class: "unk" })));
+    }));
+  }
+
+  function jobCard(job, actions) {
+    const url = safeUrl(job.url);
+    const list = (title, items) => (Array.isArray(items) && items.length)
+      ? h("div", {}, h("div", { class: "label" }, title), h("ul", {}, items.map((x) => h("li", {}, x)))) : null;
+    return h("article", { class: "job" },
+      h("div", { class: "job-head" },
+        h("span", { class: "code" }, job.code || job.id),
+        h("div", { style: "min-width:0" },
+          h("div", { class: "job-title" }, job.title || "Untitled vacancy"),
+          h("div", { class: "meta" }, [job.employer, place(job), job.posted ? "posted " + job.posted : null, job.source].filter(Boolean).join(" · "))),
+        h("div", { class: "score" }, h("b", {}, typeof job.match === "number" ? job.match + "%" : "–"),
+          h("small", {}, job.confidence ? job.confidence + " confidence" : "match"))),
+      breakdown(job),
+      h("div", { class: "cols" }, list("Why it fits", job.reasons), list("Gaps", job.gaps), list("Not stated in the advert", job.unknowns)),
+      job.flags && job.flags.length ? h("div", { class: "notice warn" }, job.flags.join(" · ")) : null,
+      h("div", { class: "row" },
+        pill(job.status || "shortlisted"),
+        job.easy_apply ? h("span", { class: "pill s-skipped" }, "Easy Apply") : null,
+        url ? h("a", { class: "link", href: url, target: "_blank", rel: "noopener noreferrer" }, "Open job ↗") : null,
+        h("span", { style: "flex:1" }),
+        ...actions));
+  }
+
+  function actionsFor(job) {
+    if (!S.owner) return [];
+    const st = job.status || "shortlisted";
+    const b = (label, cls, fn) => h("button", { class: "btn " + cls, onclick: fn }, label);
+    if (st === "shortlisted") return [
+      b("Skip", "ghost", () => setStatus(job, "skipped")),
+      b(job.easy_apply ? "Approve & apply" : "Approve", "gold", () => setStatus(job, "approved", "approved on dashboard")),
+    ];
+    if (st === "approved" || st === "applying") return [
+      b("Undo", "ghost", () => setStatus(job, "shortlisted", "approval withdrawn")),
+      b("Mark applied", "", () => setStatus(job, "applied", "marked on dashboard")),
+    ];
+    if (st === "needs_you" || st === "failed") return [
+      b("Dismiss", "ghost", () => setStatus(job, "dismissed")),
+      b("Mark applied", "", () => setStatus(job, "applied", "applied manually")),
+    ];
+    return [];
+  }
+
+  function applyPrompt(approved) {
+    const p = S.profile || {};
+    const id = p.identity || {};
+    const m = p.headline_metrics || {};
+    const lines = approved.slice(0, DAILY_CAP).map((j) => `- ${j.code}: ${j.title} — ${j.employer} (${place(j)}) ${j.url || ""}`);
+    return [
+      "Apply to these approved LinkedIn Easy Apply jobs for me, in your browser, where I am signed in to LinkedIn:",
+      ...lines,
+      "",
+      "Rules:",
+      `1. At most ${DAILY_CAP} applications today, one at a time, at a normal human pace.`,
+      "2. Use only these verified facts. Never invent or estimate anything:",
+      `   Name: ${id.name || ""} · Email: ${id.email || ""} · Phone: ${id.phone || ""} · Based in: ${id.base || ""}`,
+      `   Current title: Head of Design Management Operations & Technical Office, MENA Development & Real Estate Investment (Riyadh; remote)`,
+      `   Total experience: ${m.years_experience || ""} years · Management: ${m.years_management || ""} years · Nationality: ${id.nationality || ""}`,
+      "   Education: Ph.D. candidate (Mansoura University, expected 2027); M.Sc. Architecture, Tanta University (2015); B.Sc. Architectural Engineering, Mansoura University (2005)",
+      "   Languages: Arabic (native), English (professional fluency)",
+      "3. Use the résumé already saved in my LinkedIn account.",
+      "4. If a question can't be answered from these facts (salary, notice period, licence numbers, years of a specific tool, anything else),",
+      "   do NOT answer it. Leave that application unsubmitted and report it as NEEDS YOU with the question text.",
+      "5. If a CAPTCHA, login prompt or company website (not Easy Apply) appears, stop that application and report it.",
+      "6. Never message, follow, connect, like or comment on anything.",
+      "7. At the end, list each job code with APPLIED, NEEDS YOU (with the question), or FAILED (with the reason).",
+    ].join("\n");
+  }
+
+  function viewToday() {
+    const shortlist = S.jobs.filter((j) => (j.status || "shortlisted") === "shortlisted")
+      .sort((a, b) => (b.match || 0) - (a.match || 0));
+    const approved = S.jobs.filter((j) => j.status === "approved");
+    const lastScout = S.runs.find((r) => r.type === "scout");
+    const parts = [];
+    parts.push(h("section", { class: "notice" },
+      h("h2", {}, "Today’s shortlist"),
+      h("p", { class: "sub" }, lastScout ? `Last scout run ${String(lastScout.at || "").replace("T", " ").slice(0, 16)} UTC: ${lastScout.summary || ""}`
+        : "The first scout run fills this list. Each job shows its match score, the evidence behind it, and anything the advert does not state.")));
+    if (approved.length) {
+      const prompt = applyPrompt(approved);
+      parts.push(h("section", { class: "draft" },
+        h("h3", {}, `${approved.length} job${approved.length > 1 ? "s" : ""} approved to apply`),
+        h("p", { class: "hint" }, "Open the Claude desktop app, start a new task, paste these instructions, and let it apply in its browser. "
+          + "Then mark each job here as applied, or leave it for tomorrow."),
+        h("div", { class: "row" }, h("button", { class: "btn gold", onclick: () => copy(prompt, "Apply instructions copied") }, "Copy apply instructions")),
+        h("details", {}, h("summary", { class: "hint" }, "Show the instructions"), h("pre", { class: "quote", style: "white-space:pre-wrap;overflow-x:auto" }, prompt))));
+    }
+    if (!shortlist.length) parts.push(h("div", { class: "notice" }, "No jobs waiting for a decision."));
+    parts.push(h("div", { class: "list" }, shortlist.map((j) => jobCard(j, actionsFor(j)))));
+    return parts;
+  }
+
+  function viewPipeline() {
+    const countries = [...new Set(S.jobs.map((j) => j.country).filter(Boolean))].sort();
+    const rows = S.jobs.filter((j) => (!S.filter.status || (j.status || "shortlisted") === S.filter.status)
+                                   && (!S.filter.country || j.country === S.filter.country))
+      .sort((a, b) => String(b.found || "").localeCompare(String(a.found || "")) || (b.match || 0) - (a.match || 0));
+    const sel = (id, value, options, onchange) => h("select", { id, onchange: (e) => onchange(e.target.value) },
+      options.map(([v, l]) => h("option", { value: v, selected: v === value }, l)));
+    return [
+      h("div", { class: "filters" },
+        sel("f-status", S.filter.status, [["", "All statuses"], ...Object.entries(STATUS_LABEL)], (v) => { S.filter.status = v; render(); }),
+        sel("f-country", S.filter.country, [["", "All countries"], ...countries.map((c) => [c, c])], (v) => { S.filter.country = v; render(); })),
+      h("div", { class: "table-wrap" }, h("table", {},
+        h("thead", {}, h("tr", {}, ["Code", "Job", "Employer", "Location", "Match", "Status", ""].map((t) => h("th", {}, t)))),
+        h("tbody", {}, rows.length ? rows.map((j) => h("tr", {},
+          h("td", { class: "meta" }, j.code || j.id), h("td", {}, j.title), h("td", {}, j.employer), h("td", {}, place(j)),
+          h("td", {}, typeof j.match === "number" ? j.match + "%" : "–"), h("td", {}, pill(j.status || "shortlisted")),
+          h("td", {}, safeUrl(j.url) ? h("a", { class: "link", href: j.url, target: "_blank", rel: "noopener noreferrer" }, "Open ↗") : "")))
+          : h("tr", {}, h("td", { colspan: "7", class: "meta" }, "Nothing here yet.")))))];
+  }
+
+  function viewEngagement() {
+    const latest = S.engagement[0];
+    if (!latest) return [h("div", { class: "notice" }, "Engagement drafts appear here after the 9 AM run: comments to post and people worth following. You post, comment and connect yourself.")];
+    const items = Array.isArray(latest.items) ? latest.items : [];
+    const people = Array.isArray(latest.people) ? latest.people : [];
+    return [
+      h("p", { class: "sub" }, `Drafts for ${latest.date}. Nothing is posted automatically.`),
+      h("div", { class: "list" }, items.map((it) => h("article", { class: "draft" },
+        h("div", { class: "row" }, h("span", { class: "code" }, it.id || ""), h("h3", {}, it.topic || "")),
+        it.context ? h("p", { class: "meta" }, it.context) : null,
+        it.why ? h("p", { class: "hint" }, "Why: " + it.why) : null,
+        h("p", { class: "quote", dir: "auto" }, it.draft || ""),
+        h("div", { class: "row" },
+          safeUrl(it.source_url) ? h("a", { class: "link", href: it.source_url, target: "_blank", rel: "noopener noreferrer" }, "Open source ↗") : null,
+          h("span", { style: "flex:1" }),
+          h("button", { class: "btn ghost", onclick: () => copy(it.draft || "", "Comment copied") }, "Copy"))))),
+      people.length ? h("section", { class: "draft" }, h("h3", {}, "People and pages worth following"),
+        h("ul", {}, people.map((p) => h("li", {}, [p.name, p.role, p.why].filter(Boolean).join(" · "))))) : null,
+    ];
+  }
+
+  function viewGrowth() {
+    const report = S.reports[0];
+    const form = h("form", { class: "grid", id: "metrics-form", onsubmit: async (e) => {
+      e.preventDefault();
+      if (!S.db || !S.owner) return;
+      const fd = new FormData(e.target);
+      const n = (k) => { const v = String(fd.get(k) || "").trim(); return v === "" ? null : Number(v); };
+      const body = { date: String(fd.get("date") || today()), profile_views: n("views"), post_impressions: n("impr"),
+                     search_appearances: n("search"), followers: n("followers"), entered_at: new Date().toISOString() };
+      try { await S.db.doc("metrics/" + body.date).set(body); toast("Numbers saved for " + body.date); e.target.reset(); }
+      catch (err) { toast("Could not save (" + (err && err.code || "error") + ")."); }
+    } },
+      h("label", {}, "Week ending", h("input", { type: "date", name: "date", id: "m-date", value: today(), required: true })),
+      h("label", {}, "Profile viewers", h("input", { type: "number", min: "0", name: "views", id: "m-views" })),
+      h("label", {}, "Post impressions", h("input", { type: "number", min: "0", name: "impr", id: "m-impr" })),
+      h("label", {}, "Search appearances", h("input", { type: "number", min: "0", name: "search", id: "m-search" })),
+      h("label", {}, "Followers", h("input", { type: "number", min: "0", name: "followers", id: "m-followers" })),
+      h("button", { class: "btn", type: "submit", disabled: !S.owner }, "Save numbers"));
+    const recent = S.metrics.slice(0, 8);
+    return [
+      h("section", { class: "draft" }, h("h3", {}, "This week’s LinkedIn numbers"),
+        h("p", { class: "hint" }, "Copy them from LinkedIn → your profile → Analytics before Monday 7 PM. The report compares week on week."), form,
+        recent.length ? h("div", { class: "table-wrap" }, h("table", {},
+          h("thead", {}, h("tr", {}, ["Week", "Viewers", "Impressions", "Searches", "Followers"].map((t) => h("th", {}, t)))),
+          h("tbody", {}, recent.map((r) => h("tr", {}, [r.date, r.profile_views, r.post_impressions, r.search_appearances, r.followers]
+            .map((v) => h("td", {}, v ?? "–"))))))) : null),
+      report ? h("section", { class: "draft prose" },
+        h("h3", {}, "Growth report · " + (report.date || "")),
+        report.summary ? h("p", {}, report.summary) : null,
+        Array.isArray(report.actions) && report.actions.length ? h("div", {}, h("div", { class: "label" }, "Three actions this week"),
+          h("ol", {}, report.actions.map((a) => h("li", {}, a)))) : null,
+        report.makeover ? h("details", {}, h("summary", {}, "Profile makeover drafts"),
+          ...Object.entries(report.makeover).map(([k, v]) => h("div", { class: "draft" }, h("div", { class: "label" }, k.replace(/_/g, " ")),
+            h("p", { dir: "auto" }, Array.isArray(v) ? v.join("\n") : String(v)),
+            h("div", { class: "row" }, h("button", { class: "btn ghost", onclick: () => copy(Array.isArray(v) ? v.join("\n") : String(v)) }, "Copy"))))) : null)
+        : h("div", { class: "notice" }, "The first report arrives Monday at 7 PM, with a full profile makeover (headline options, About in English and Arabic, skills)."),
+    ];
+  }
+
+  function viewActivity() {
+    return [h("div", { class: "table-wrap" }, h("table", {},
+      h("thead", {}, h("tr", {}, ["When (UTC)", "Run", "Result"].map((t) => h("th", {}, t)))),
+      h("tbody", {}, S.runs.length ? S.runs.map((r) => h("tr", {}, h("td", { class: "meta" }, String(r.at || "").replace("T", " ").slice(0, 16)),
+        h("td", {}, r.type || ""), h("td", {}, r.summary || "")))
+        : h("tr", {}, h("td", { colspan: "3", class: "meta" }, "No runs yet."))))),
+      h("p", { class: "hint" }, "Scout: daily 9 AM Cairo · Growth report: Mondays 7 PM Cairo · Applications: when you run the copied instructions in the Claude desktop app.")];
+  }
+
+  function render() {
+    renderTabs();
+    renderStats();
+    const view = document.getElementById("view");
+    if (!S.db) {
+      view.replaceChildren(h("div", { class: "notice" }, "This desk needs Claude’s private storage. Open it while signed in to claude.ai."));
+      return;
+    }
+    const views = { today: viewToday, pipeline: viewPipeline, engagement: viewEngagement, growth: viewGrowth, activity: viewActivity };
+    const content = (views[S.tab] || viewToday)();
+    if (!S.owner) content.unshift(h("div", { class: "notice warn" }, "Read-only view. Only the owner can approve jobs or save numbers."));
+    view.replaceChildren(...[].concat(content).filter(Boolean));
+  }
+
+  // ---------- boot ----------
+  const hash = (location.hash || "").slice(1);
+  if (TABS.some(([k]) => k === hash)) S.tab = hash;
+  render();
+
+  (async () => {
+    const claude = window.claude;
+    if (!claude || !claude.use) { render(); return; }
+    const [db, user] = await Promise.all([claude.use("db"), claude.use("user")]);
+    S.db = db;
+    S.owner = user ? await user.isOwner() : false;
+    if (!db) { render(); return; }
+    const onErr = (e) => toast("Live updates stopped (" + (e && e.code || "error") + "). Reload the page.");
+    const docs = (snap) => snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    db.collection("jobs").onSnapshot((s) => { S.jobs = docs(s); render(); }, onErr);
+    db.collection("engagement").orderBy("date", "desc").limit(7).onSnapshot((s) => { S.engagement = docs(s); render(); }, onErr);
+    db.collection("reports").orderBy("date", "desc").limit(12).onSnapshot((s) => { S.reports = docs(s); render(); }, onErr);
+    db.collection("runs").orderBy("at", "desc").limit(30).onSnapshot((s) => { S.runs = docs(s); render(); }, onErr);
+    db.collection("metrics").orderBy("date", "desc").limit(26).onSnapshot((s) => { S.metrics = docs(s); render(); }, onErr);
+    db.doc("config/profile").onSnapshot((d) => { S.profile = d.exists ? d.data() : null; }, onErr);
+  })();
+})();
+</script>

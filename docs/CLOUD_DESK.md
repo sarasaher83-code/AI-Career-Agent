@@ -13,10 +13,13 @@ plus a private dashboard page on claude.ai. The Windows app (S0/S1) stays availa
 | **Growth Report** | Routine, Mondays around 7 PM Cairo | Follows `cloud/agents/GROWTH_REPORT.md`: week-on-week numbers, pipeline, 3 actions; first run adds the fact-checked profile makeover |
 | **Apply step** | Claude desktop app on the candidate's PC | The desk's "Copy apply instructions" gives a ready task: Easy Apply only, max 5 a day, verified facts only, skip any job with a question the profile can't answer, stop at CAPTCHA / login / external site, never message or connect |
 
+| **Posting step** | Claude desktop app on the candidate's PC | Content tab → "Copy posting instructions" for the next approved post: paste the text exactly, visibility Anyone, post once, report the link; stop at sign-in, CAPTCHA or security checks; no other LinkedIn activity |
+
 ## Decisions that changed the original brief
 - **Automatic Easy Apply** was chosen by the candidate (option 3), after the LinkedIn-rules risk was explained.
   Approval stays explicit: nothing is applied to until she taps **Approve** on that job.
-- Posting, commenting and connecting remain manual.
+- **Posting her own approved posts** through the desktop app was requested by the candidate on 30 Sep 2026, after the LinkedIn-rules risk was explained. Each post needs her Approve tap and is run one at a time by her.
+- Commenting, liking, connecting and messaging remain manual.
 
 ## Privacy
 - No personal data is in this repository. The page source is public; the data lives only in the owner-only database.

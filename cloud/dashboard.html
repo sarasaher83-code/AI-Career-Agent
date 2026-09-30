@@ -405,8 +405,29 @@ form.grid label { display: grid; gap: 4px; font-size: 12px; color: var(--muted);
     const weeks = S.content.filter((w) => Array.isArray(w.posts) && w.posts.length);
     if (!weeks.length) return [h("div", { class: "notice" }, "Post drafts appear here: three a week, drafted every Monday evening from your verified experience.")];
     const b = (label, cls, fn) => h("button", { class: "btn " + cls, onclick: fn }, label);
+    const ready = weeks.flatMap((w) => w.posts.filter((p) => p.status === "approved"));
+    const next = ready[0];
+    const postingPrompt = next ? [
+      "Publish one LinkedIn post for me, in your browser, where I am signed in to LinkedIn.",
+      "",
+      "1. Open https://www.linkedin.com/feed/ and click \"Start a post\".",
+      "2. Paste the text between the lines below EXACTLY as written. Do not change, shorten, translate, add or remove anything (no extra hashtags, emojis, mentions or links).",
+      "3. Visibility: Anyone. Do not add images, polls, documents or tags.",
+      "4. Click Post once. Then open the published post and tell me its URL.",
+      "5. If LinkedIn asks me to sign in, shows a CAPTCHA or a security check, or the text looks different after pasting, stop and tell me. Do not retry.",
+      "6. Do nothing else on LinkedIn: no likes, comments, reposts, messages, follows or connection requests.",
+      "",
+      "----- POST " + next.id + " -----",
+      next.body || "",
+      "----- END -----",
+    ].join("\n") : "";
     return [
-      h("p", { class: "sub" }, "Approve a draft, copy it into LinkedIn yourself at the suggested time, then mark it posted. Nothing is published automatically. Edit freely in LinkedIn before posting."),
+      h("p", { class: "sub" }, "Approve a draft, then publish it: copy it into LinkedIn yourself, or use the posting instructions below with the Claude desktop app. Then mark it posted."),
+      next ? h("section", { class: "draft" },
+        h("h3", {}, `Next approved post: ${next.id} · ${next.title || ""}`),
+        h("p", { class: "hint" }, `Suggested time: ${[next.day, next.time].filter(Boolean).join(", ")}. Open the Claude desktop app, start a new task, paste the instructions, and let it post in its browser. `
+          + "One post per task. When it gives you the post link, tap Mark posted below."),
+        h("div", { class: "row" }, h("button", { class: "btn gold", onclick: () => copy(postingPrompt, "Posting instructions copied") }, "Copy posting instructions"))) : null,
       ...weeks.map((w) => h("section", { class: "list" },
         h("h2", {}, "Week of " + w.week),
         ...w.posts.map((p) => {

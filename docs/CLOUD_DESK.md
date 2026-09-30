@@ -12,12 +12,14 @@ plus a private dashboard page on claude.ai. The Windows app (S0/S1) stays availa
 | **Job Scout** | Routine, daily around 9 AM Cairo | Follows `cloud/agents/JOB_SCOUT.md`: reads job alerts read-only, cleans links, de-duplicates, filters to GCC + remote, scores with the 8-part model, writes the top 5 and the engagement drafts |
 | **Growth Report** | Routine, Mondays around 7 PM Cairo | Follows `cloud/agents/GROWTH_REPORT.md`: week-on-week numbers, pipeline, 3 actions; first run adds the fact-checked profile makeover |
 | **Apply step** | Claude desktop app on the candidate's PC | The desk's "Copy apply instructions" gives a ready task: Easy Apply only, max 5 a day, verified facts only, skip any job with a question the profile can't answer, stop at CAPTCHA / login / external site, never message or connect |
+| **Profile update step** | Claude desktop app on the candidate's PC | Growth tab → makeover section 0: one task that applies the fact-checked makeover to her LinkedIn profile, with network notifications off, no deletions except those listed, and entries needing her confirmation left untouched |
 | **Posting step** | Claude desktop app on the candidate's PC | Content tab → "Copy posting instructions" for the next approved post: paste the text exactly, visibility Anyone, post once, report the link; stop at sign-in, CAPTCHA or security checks; no other LinkedIn activity |
 
 ## Decisions that changed the original brief
 - **Automatic Easy Apply** was chosen by the candidate (option 3), after the LinkedIn-rules risk was explained.
   Approval stays explicit: nothing is applied to until she taps **Approve** on that job.
 - **Posting her own approved posts** through the desktop app was requested by the candidate on 30 Sep 2026, after the LinkedIn-rules risk was explained. Each post needs her Approve tap and is run one at a time by her.
+- **Profile edits through the desktop app** were requested by the candidate on 30 Sep 2026.
 - Commenting, liking, connecting and messaging remain manual.
 
 ## Privacy

@@ -96,6 +96,14 @@ textarea { width: 100%; resize: vertical; }
 .draft { border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: grid; gap: 8px; min-width: 0; }
 .draft p { margin: 0; white-space: pre-wrap; }
 .quote { background: var(--paper); border-radius: 8px; padding: 10px 12px; }
+.bar-row { display: grid; grid-template-columns: minmax(90px, 160px) 1fr 44px; gap: 10px; align-items: center; font-size: 13px; }
+.bar-row .track { height: 10px; background: var(--paper); border-radius: 4px; overflow: hidden; }
+.bar-row .fill { height: 100%; background: var(--gold); border-radius: 0 4px 4px 0; }
+.bar-row b { font-variant-numeric: tabular-nums; text-align: right; font-weight: 600; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.kpi { background: var(--paper); border-radius: 10px; padding: 14px 16px; }
+.kpi b { display: block; font: 600 28px/1.1 var(--display); font-variant-numeric: tabular-nums; }
+.kpi span { font-size: 12px; color: var(--muted); }
 .pack { display: grid; gap: 6px; border-top: 1px dashed var(--line); padding-top: 10px; }
 form.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; align-items: end; }
 form.grid label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
@@ -134,7 +142,7 @@ form.grid label { display: grid; gap: 4px; font-size: 12px; color: var(--muted);
 (() => {
   const DAILY_CAP = 5;
   const TABS = [
-    ["today", "Today"], ["pipeline", "Pipeline"], ["content", "Content"], ["engagement", "Engagement"], ["growth", "Growth"], ["activity", "Activity"],
+    ["today", "Today"], ["pipeline", "Pipeline"], ["content", "Content"], ["engagement", "Engagement"], ["recruiters", "Recruiters"], ["growth", "Growth"], ["analytics", "Analytics"], ["activity", "Activity"],
   ];
   const STATUS_LABEL = {
     shortlisted: "Shortlisted", approved: "Approved to apply", applying: "Applying", applied: "Applied",
@@ -145,7 +153,7 @@ form.grid label { display: grid; gap: 4px; font-size: 12px; color: var(--muted);
     leadership: "Leadership", technical: "Technical", qualifications: "Qualifications", progression: "Progression",
   };
   const S = { db: null, owner: false, tab: "today", jobs: [], engagement: [], reports: [], runs: [], metrics: [],
-              profile: null, packs: {}, content: [], downloads: null, filter: { status: "", country: "" }, ready: false };
+              profile: null, packs: {}, content: [], recruiters: null, downloads: null, filter: { status: "", country: "" }, ready: false };
 
   // ---------- helpers ----------
   function h(tag, attrs, ...kids) {
@@ -445,6 +453,109 @@ form.grid label { display: grid; gap: 4px; font-size: 12px; color: var(--muted);
         })))];
   }
 
+  // ---------- recruiters ----------
+  const R_STATUS = { not_contacted: "Not contacted", registered: "CV registered", contacted: "Contacted", replied: "Replied",
+                     in_process: "In process", not_now: "Not now" };
+
+  async function saveRecruiters(items, msg) {
+    if (!S.db || !S.owner) return;
+    try { await S.db.doc("directory/recruiters").update({ items, updated_at: new Date().toISOString() }); toast(msg || "Saved"); }
+    catch (e) { toast("Could not save (" + (e && e.code || "error") + ")."); }
+  }
+
+  function viewRecruiters() {
+    const dir = S.recruiters;
+    if (!dir) return [h("div", { class: "notice" }, "The recruiter directory is empty.")];
+    const items = Array.isArray(dir.items) ? dir.items : [];
+    const setField = (id, patch, msg) => saveRecruiters(items.map((r) => r.id === id ? { ...r, ...patch } : r), msg);
+    const order = { High: 0, Medium: 1, Low: 2 };
+    const sorted = items.slice().sort((a, b) => (order[a.priority] ?? 3) - (order[b.priority] ?? 3));
+    const addForm = h("form", { class: "grid", id: "rec-form", onsubmit: (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const name = String(fd.get("name") || "").trim();
+      if (!name) return;
+      const next = "R" + String(items.length + 1).padStart(2, "0");
+      const url = String(fd.get("url") || "").trim();
+      saveRecruiters([...items, { id: next, name, type: String(fd.get("type") || "Recruiter"), priority: "Medium",
+        focus: "", locations: "", source_url: /^https:\/\//i.test(url) ? url : "", how_to_engage: "",
+        status: "not_contacted", notes: String(fd.get("notes") || ""), last_contact: null }], "Added " + name);
+      e.target.reset();
+    } },
+      h("label", {}, "Name or firm", h("input", { name: "name", id: "rec-name", required: true })),
+      h("label", {}, "Type", h("select", { name: "type", id: "rec-type" }, ["Recruiter (person)", "Recruitment consultancy", "Executive search", "In-house employer"].map((t) => h("option", {}, t)))),
+      h("label", {}, "Link (https://…)", h("input", { name: "url", id: "rec-url", type: "url" })),
+      h("label", {}, "Notes", h("input", { name: "notes", id: "rec-notes" })),
+      h("button", { class: "btn", type: "submit", disabled: !S.owner }, "Add"));
+    return [
+      h("section", { class: "draft" }, h("h3", {}, "Intro note for recruiters"),
+        h("p", { class: "hint" }, "Fact-checked. Replace {first name}, then send it yourself from LinkedIn or email."),
+        h("p", { class: "quote" }, dir.intro_note || ""),
+        h("div", { class: "row" }, h("button", { class: "btn ghost", onclick: () => copy(dir.intro_note || "", "Intro note copied") }, "Copy note"))),
+      h("div", { class: "list" }, sorted.map((r) => h("article", { class: "draft" },
+        h("div", { class: "row" }, h("span", { class: "code" }, r.id), h("h3", {}, r.name),
+          h("span", { class: "pill " + (r.priority === "High" ? "s-shortlisted" : "s-skipped") }, r.priority || ""),
+          h("span", { style: "flex:1" }),
+          h("select", { "aria-label": "Status for " + r.name, onchange: (e) => setField(r.id, { status: e.target.value, last_contact: new Date().toISOString().slice(0, 10) }, "Status saved") },
+            Object.entries(R_STATUS).map(([v, l]) => h("option", { value: v, selected: v === (r.status || "not_contacted") }, l)))),
+        h("p", { class: "meta" }, [r.type, r.locations, r.last_contact ? "last update " + r.last_contact : null].filter(Boolean).join(" · ")),
+        r.focus ? h("p", {}, r.focus) : null,
+        r.how_to_engage ? h("p", { class: "hint" }, "How to engage: " + r.how_to_engage) : null,
+        h("div", { class: "row" },
+          safeUrl(r.source_url) ? h("a", { class: "link", href: r.source_url, target: "_blank", rel: "noopener noreferrer" }, "Open ↗") : null,
+          h("span", { style: "flex:1" }),
+          h("input", { value: r.notes || "", placeholder: "Your notes", "aria-label": "Notes for " + r.name, id: "rec-note-" + r.id,
+            onchange: (e) => setField(r.id, { notes: e.target.value }, "Notes saved") }))))),
+      h("section", { class: "draft" }, h("h3", {}, "Add a recruiter or firm"), addForm),
+    ];
+  }
+
+  // ---------- analytics ----------
+  function bars(title, pairs) {
+    const max = Math.max(1, ...pairs.map(([, n]) => n));
+    return h("section", { class: "draft" }, h("h3", {}, title),
+      pairs.length ? pairs.map(([label, n]) => h("div", { class: "bar-row", title: label + ": " + n },
+        h("span", {}, label), h("div", { class: "track" }, h("div", { class: "fill", style: "width:" + (n / max * 100) + "%" })), h("b", {}, n)))
+        : h("p", { class: "meta" }, "No data yet."));
+  }
+
+  function viewAnalytics() {
+    const J = S.jobs;
+    const st = (x) => J.filter((j) => (j.status || "shortlisted") === x).length;
+    const decided = J.filter((j) => ["shortlisted", "approved", "applying", "applied", "needs_you", "dismissed", "failed"].includes(j.status || "shortlisted"));
+    const applied = st("applied");
+    const approved = J.filter((j) => ["approved", "applying", "applied", "needs_you", "failed"].includes(j.status)).length;
+    const scored = J.filter((j) => typeof j.match === "number");
+    const avg = scored.length ? Math.round(scored.reduce((a, j) => a + j.match, 0) / scored.length) : null;
+    const posts = S.content.flatMap((w) => w.posts || []);
+    const recs = (S.recruiters && S.recruiters.items) || [];
+    const count = (arr, key) => Object.entries(arr.reduce((m, x) => { const k = key(x) || "Not stated"; m[k] = (m[k] || 0) + 1; return m; }, {}))
+      .sort((a, b) => b[1] - a[1]);
+    const m = S.metrics.slice().sort((a, b) => String(a.date).localeCompare(String(b.date)));
+    const delta = (i, k) => (i > 0 && m[i][k] != null && m[i - 1][k] != null) ? (m[i][k] - m[i - 1][k]) : null;
+    const fmtDelta = (d) => d == null ? "" : (d > 0 ? " (+" + d + ")" : d < 0 ? " (" + d + ")" : " (0)");
+    return [
+      h("div", { class: "kpis" },
+        h("div", { class: "kpi" }, h("b", {}, J.length), h("span", {}, "jobs found")),
+        h("div", { class: "kpi" }, h("b", {}, decided.length), h("span", {}, "shortlisted by the scout")),
+        h("div", { class: "kpi" }, h("b", {}, approved), h("span", {}, "approved by you")),
+        h("div", { class: "kpi" }, h("b", {}, applied), h("span", {}, "applications sent")),
+        h("div", { class: "kpi" }, h("b", {}, avg == null ? "–" : avg + "%"), h("span", {}, "average match")),
+        h("div", { class: "kpi" }, h("b", {}, posts.filter((p) => p.status === "posted").length + " / " + posts.length), h("span", {}, "posts published / drafted")),
+        h("div", { class: "kpi" }, h("b", {}, recs.filter((r) => ["contacted", "replied", "in_process", "registered"].includes(r.status)).length + " / " + recs.length), h("span", {}, "recruiters engaged"))),
+      bars("Pipeline by status", Object.keys(STATUS_LABEL).map((k) => [STATUS_LABEL[k], st(k)]).filter(([, n]) => n > 0)),
+      bars("Jobs by country", count(J, (j) => j.country)),
+      bars("Jobs by employer", count(J, (j) => j.employer).slice(0, 8)),
+      bars("How to apply", count(J, (j) => METHOD_LABEL[j.apply_method] || (j.easy_apply ? "LinkedIn Easy Apply" : "Not checked yet"))),
+      h("section", { class: "draft" }, h("h3", {}, "LinkedIn numbers, week on week"),
+        m.length ? h("div", { class: "table-wrap" }, h("table", {},
+          h("thead", {}, h("tr", {}, ["Week", "Viewers", "Impressions", "Searches", "Followers"].map((t) => h("th", {}, t)))),
+          h("tbody", {}, m.map((r, i) => h("tr", {}, h("td", {}, r.date),
+            ...["profile_views", "post_impressions", "search_appearances", "followers"].map((k) => h("td", {}, (r[k] ?? "–") + fmtDelta(delta(i, k)))))))))
+          : h("p", { class: "meta" }, "Save your weekly LinkedIn numbers in the Growth tab to see the trend here.")),
+    ];
+  }
+
   function viewEngagement() {
     const latest = S.engagement[0];
     if (!latest) return [h("div", { class: "notice" }, "Engagement drafts appear here after the 9 AM run: comments to post and people worth following. You post, comment and connect yourself.")];
@@ -522,7 +633,7 @@ form.grid label { display: grid; gap: 4px; font-size: 12px; color: var(--muted);
       view.replaceChildren(h("div", { class: "notice" }, "This desk needs Claude’s private storage. Open it while signed in to claude.ai."));
       return;
     }
-    const views = { today: viewToday, pipeline: viewPipeline, content: viewContent, engagement: viewEngagement, growth: viewGrowth, activity: viewActivity };
+    const views = { today: viewToday, pipeline: viewPipeline, content: viewContent, recruiters: viewRecruiters, analytics: viewAnalytics, engagement: viewEngagement, growth: viewGrowth, activity: viewActivity };
     const content = (views[S.tab] || viewToday)();
     if (!S.owner) content.unshift(h("div", { class: "notice warn" }, "Read-only view. Only the owner can approve jobs or save numbers."));
     view.replaceChildren(...[].concat(content).filter(Boolean));
@@ -548,6 +659,7 @@ form.grid label { display: grid; gap: 4px; font-size: 12px; color: var(--muted);
     db.collection("reports").orderBy("date", "desc").limit(12).onSnapshot((s) => { S.reports = docs(s); render(); }, onErr);
     db.collection("runs").orderBy("at", "desc").limit(30).onSnapshot((s) => { S.runs = docs(s); render(); }, onErr);
     db.collection("content").orderBy("week", "asc").onSnapshot((s) => { S.content = docs(s); render(); }, onErr);
+    db.doc("directory/recruiters").onSnapshot((d) => { S.recruiters = d.exists ? d.data() : null; render(); }, onErr);
     db.collection("metrics").orderBy("date", "desc").limit(26).onSnapshot((s) => { S.metrics = docs(s); render(); }, onErr);
     db.doc("config/profile").onSnapshot((d) => { S.profile = d.exists ? d.data() : null; }, onErr);
   })();

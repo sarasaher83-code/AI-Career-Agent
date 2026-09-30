@@ -96,6 +96,7 @@ textarea { width: 100%; resize: vertical; }
 .draft { border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: grid; gap: 8px; min-width: 0; }
 .draft p { margin: 0; white-space: pre-wrap; }
 .quote { background: var(--paper); border-radius: 8px; padding: 10px 12px; }
+.pack { display: grid; gap: 6px; border-top: 1px dashed var(--line); padding-top: 10px; }
 form.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; align-items: end; }
 form.grid label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
 .prose { max-width: 70ch; }
@@ -144,7 +145,7 @@ form.grid label { display: grid; gap: 4px; font-size: 12px; color: var(--muted);
     leadership: "Leadership", technical: "Technical", qualifications: "Qualifications", progression: "Progression",
   };
   const S = { db: null, owner: false, tab: "today", jobs: [], engagement: [], reports: [], runs: [], metrics: [],
-              profile: null, filter: { status: "", country: "" }, ready: false };
+              profile: null, packs: {}, downloads: null, filter: { status: "", country: "" }, ready: false };
 
   // ---------- helpers ----------
   function h(tag, attrs, ...kids) {
@@ -236,12 +237,59 @@ form.grid label { display: grid; gap: 4px; font-size: 12px; color: var(--muted);
       breakdown(job),
       h("div", { class: "cols" }, list("Why it fits", job.reasons), list("Gaps", job.gaps), list("Not stated in the advert", job.unknowns)),
       job.flags && job.flags.length ? h("div", { class: "notice warn" }, job.flags.join(" · ")) : null,
+      packBox(job),
       h("div", { class: "row" },
         pill(job.status || "shortlisted"),
-        job.easy_apply ? h("span", { class: "pill s-skipped" }, "Easy Apply") : null,
+        job.apply_method ? h("span", { class: "pill s-skipped" }, METHOD_LABEL[job.apply_method] || job.apply_method)
+          : (job.easy_apply ? h("span", { class: "pill s-skipped" }, "Easy Apply") : null),
         url ? h("a", { class: "link", href: url, target: "_blank", rel: "noopener noreferrer" }, "Open job ↗") : null,
         h("span", { style: "flex:1" }),
         ...actions));
+  }
+
+  const METHOD_LABEL = {
+    linkedin_easy_apply: "LinkedIn Easy Apply", workable_form: "Workable form (no account)",
+    company_portal: "Company portal (login needed)", email: "Apply by email", unknown: "Apply method not confirmed",
+  };
+
+  function b64ToBytes(b64) {
+    const bin = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes;
+  }
+
+  async function loadPack(job) {
+    if (S.packs[job.id]) return S.packs[job.id];
+    const snap = await S.db.doc("packs/" + job.id).get();
+    S.packs[job.id] = snap.exists ? snap.data() : null;
+    return S.packs[job.id];
+  }
+
+  async function saveFile(job, file) {
+    if (!S.downloads) { toast("Downloads are not available in this view."); return; }
+    try {
+      await S.downloads.save({ filename: file.filename, data: b64ToBytes(file.b64) });
+    } catch (e) {
+      if (e && e.code !== "declined") toast("Could not save the file (" + (e.code || "error") + ").");
+    }
+  }
+
+  function packBox(job) {
+    if (!job.pack_ready) return null;
+    const box = h("div", { class: "pack" }, h("div", { class: "label" }, "Application pack"),
+      h("div", { class: "row" }, h("button", { class: "btn ghost", onclick: async (e) => {
+        e.target.disabled = true;
+        try {
+          const pack = await loadPack(job);
+          if (!pack) { toast("Pack not found."); return; }
+          const row = e.target.parentElement;
+          row.replaceChildren(
+            ...pack.files.map((f) => h("button", { class: "btn ghost", onclick: () => saveFile(job, f) }, "⬇ " + f.kind)),
+            h("button", { class: "btn ghost", onclick: () => copy(pack.letter_text || "", "Cover letter copied") }, "Copy cover letter text"));
+        } catch (err) { toast("Could not load the pack (" + (err && err.code || "error") + ")."); e.target.disabled = false; }
+      } }, "Show CV and cover letter")));
+    return box;
   }
 
   function actionsFor(job) {
@@ -292,7 +340,9 @@ form.grid label { display: grid; gap: 4px; font-size: 12px; color: var(--muted);
   function viewToday() {
     const shortlist = S.jobs.filter((j) => (j.status || "shortlisted") === "shortlisted")
       .sort((a, b) => (b.match || 0) - (a.match || 0));
-    const approved = S.jobs.filter((j) => j.status === "approved");
+    const approvedAll = S.jobs.filter((j) => j.status === "approved");
+    const approved = approvedAll.filter((j) => j.easy_apply || j.apply_method === "linkedin_easy_apply");
+    const selfApply = approvedAll.filter((j) => !approved.includes(j));
     const lastScout = S.runs.find((r) => r.type === "scout");
     const parts = [];
     parts.push(h("section", { class: "notice" },
@@ -308,6 +358,14 @@ form.grid label { display: grid; gap: 4px; font-size: 12px; color: var(--muted);
         h("div", { class: "row" }, h("button", { class: "btn gold", onclick: () => copy(prompt, "Apply instructions copied") }, "Copy apply instructions")),
         h("details", {}, h("summary", { class: "hint" }, "Show the instructions"), h("pre", { class: "quote", style: "white-space:pre-wrap;overflow-x:auto" }, prompt))));
     }
+    if (selfApply.length) {
+      parts.push(h("section", { class: "draft" },
+        h("h3", {}, `${selfApply.length} approved job${selfApply.length > 1 ? "s" : ""} to submit yourself`),
+        h("p", { class: "hint" }, "These are not LinkedIn Easy Apply, so automatic applying does not cover them. Each has a tailored CV and cover letter: "
+          + "download them, open the job, submit, then tap Mark applied."),
+        h("div", { class: "list" }, selfApply.map((j) => jobCard(j, actionsFor(j))))));
+    }
+    parts.push(h("h2", {}, "Waiting for your decision"));
     if (!shortlist.length) parts.push(h("div", { class: "notice" }, "No jobs waiting for a decision."));
     parts.push(h("div", { class: "list" }, shortlist.map((j) => jobCard(j, actionsFor(j)))));
     return parts;
@@ -424,7 +482,8 @@ form.grid label { display: grid; gap: 4px; font-size: 12px; color: var(--muted);
   (async () => {
     const claude = window.claude;
     if (!claude || !claude.use) { render(); return; }
-    const [db, user] = await Promise.all([claude.use("db"), claude.use("user")]);
+    const [db, user, downloads] = await Promise.all([claude.use("db"), claude.use("user"), claude.use("downloads")]);
+    S.downloads = downloads;
     S.db = db;
     S.owner = user ? await user.isOwner() : false;
     if (!db) { render(); return; }

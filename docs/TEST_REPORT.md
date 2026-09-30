@@ -62,3 +62,25 @@ The raw emails were not kept; only the extracted fields and clean public links a
   verified live on the candidate's computer or once the environment allows those hosts.
 - Alert emails carry only the listing summary (no full description). For full scoring in S2, the description can be
   pasted via manual entry; the vacancy is merged automatically.
+
+---
+
+## Cloud Career Desk and Application Builder (29–30 Sep 2026)
+
+**Automated tests:** 59 passed, 0 failed (4 new for the Application Builder).
+
+| Area | What is verified |
+|---|---|
+| Application Builder | CV and cover letter built in Word and PDF; achievement lines are copied verbatim by index and keep the chosen order; private preferences are never printed; currency, invented numbers and credentials not held (e.g. MBA) block the build; unknown highlight, project or competency indices are refused |
+| Desk storage privacy | `config/profile` read back at the "admin" (editor) level returns nothing: only the owner can read it |
+| Scheduled Job Scout | First test run: the code clone and desk database worked; Gmail was not attached, and the run stopped and logged it as designed. Second run (web search only) wrote 9 jobs, top 5 shortlisted, reasons and gaps recorded |
+| Dashboard | Approvals from the page were recorded in each job's history (candidate approved 5 jobs); packs load on demand and download through the platform's save dialog |
+
+**Findings from the first live run, and fixes:**
+- The run back-dated its log entries. The log was corrected, and the instructions now require the real clock time and one entry per run.
+- Job pages are blocked from the cloud environment, so scores came from search snippets. Such jobs are now capped at medium confidence and flagged.
+- Two links were aggregator copies and one employer was unnamed. The instructions now require original links and flag unknown employers.
+- None of the 5 approved jobs were LinkedIn Easy Apply. Each job now records its application method, and the dashboard separates Easy Apply jobs (desktop app) from jobs to submit yourself.
+- LibreOffice here has no Writer component, so PDFs are rendered with PyMuPDF, with fonts subset to about 25–40 KB per file.
+
+**Packs built:** J001, J002, J005, J007, J009. All passed the fact check on the first build.

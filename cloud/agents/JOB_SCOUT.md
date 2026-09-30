@@ -54,7 +54,8 @@ You are the Job Scout for one candidate. The candidate's private data lives in t
    written from her verified experience (no numbers or claims outside the profile, **no financial figures**), no hashtags, no
    emojis. Add 3–5 people or company pages worth following, with the reason. Fields: `date`, `items[{id:"C1",topic,context,
    source_url,why,draft}]`, `people[{name,role,why}]`.
-7. **Log the run.** Write `runs/<ISO time>` with `{type:"scout", at, summary:"N emails · N jobs found · N new · top match N%"}`.
+7. **Application packs.** Follow `cloud/agents/APPLICATION_BUILDER.md` for every approved job without a pack.
+8. **Log the run.** Write `runs/<ISO time>` with `{type:"scout", at, summary:"N emails · N jobs found · N new · top match N%"}`.
 
 ## Accuracy rules (learned from the first run)
 - **Timestamps are real.** Get the time with `date -u +%Y-%m-%dT%H:%M:%SZ`. Write exactly one `runs/` entry per run; never back-date

@@ -17,7 +17,10 @@ Read and write the Career Desk database (URL in `cloud/DESK_URL`) with the `Arti
               "featured":["…"],"banner_brief":"…"}}
 ```
 - Compare with the previous week only when both weeks have numbers; otherwise say which numbers are missing.
-- **First report only**, include `makeover`. It must match the CV exactly:
+- A profile makeover was already delivered on 2026-09-30 (`reports/2026-09-30`). Do **not** rewrite it weekly.
+  Include a new `makeover` only if `config/profile` changed since the last makeover, or the candidate asked for one;
+  otherwise report which of its section-1 corrections she still appears not to have made (if known) in `actions`.
+- When a makeover is written, include `makeover`. It must match the CV exactly:
   name *Sara Saher El-Khoreby*; title *Head of Design Management Operations & Technical Office*; employer
   *MENA Development & Real Estate Investment*; dates, degrees and certifications as in the profile; "completed" (not
   "certified") for courses; no "Director" title, no MBA wording, no financial figures, no forbidden phrases.

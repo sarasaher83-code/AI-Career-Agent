@@ -25,6 +25,14 @@ Read and write the Career Desk database (URL in `cloud/DESK_URL`) with the `Arti
   *MENA Development & Real Estate Investment*; dates, degrees and certifications as in the profile; "completed" (not
   "certified") for courses; no "Director" title, no MBA wording, no financial figures, no forbidden phrases.
   Also list the corrections her current LinkedIn profile needs (dates, missing Connect Architects role, languages, email).
+- **Content calendar:** write `content/<next Sunday, YYYY-MM-DD>` = `{week, created_at, posts:[{id, day, time, pillar,
+  format, title, body, status:"draft"}]}` with **3 posts** (Sunday, Tuesday, Thursday, 8:30 AM Riyadh), continuing the
+  `P#` numbering. Skip if that week already exists. Rotate pillars: design management, technical office, real estate
+  development and sales alignment, heritage and public realm, leadership, lessons learned, Saudi market (only with a
+  cited source from web search, linked in the body). Each post: 120–220 words, one clear idea from her verified
+  experience, a first line that stands alone, plain sentences, at most 3 hashtags at the end, no emojis, no engagement
+  bait, no financial figures, no confidential methodology content. Look at `content` posts marked `posted` to avoid
+  repeating a topic.
 - Run the repository fact checker on every text field before writing:
   `python -m cloud.fact_check_cli <file-with-text>` using the profile saved to a temp file (never inside the repo).
   Rewrite anything it blocks.

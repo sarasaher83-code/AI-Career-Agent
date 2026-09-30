@@ -134,7 +134,7 @@ form.grid label { display: grid; gap: 4px; font-size: 12px; color: var(--muted);
 (() => {
   const DAILY_CAP = 5;
   const TABS = [
-    ["today", "Today"], ["pipeline", "Pipeline"], ["engagement", "Engagement"], ["growth", "Growth"], ["activity", "Activity"],
+    ["today", "Today"], ["pipeline", "Pipeline"], ["content", "Content"], ["engagement", "Engagement"], ["growth", "Growth"], ["activity", "Activity"],
   ];
   const STATUS_LABEL = {
     shortlisted: "Shortlisted", approved: "Approved to apply", applying: "Applying", applied: "Applied",
@@ -145,7 +145,7 @@ form.grid label { display: grid; gap: 4px; font-size: 12px; color: var(--muted);
     leadership: "Leadership", technical: "Technical", qualifications: "Qualifications", progression: "Progression",
   };
   const S = { db: null, owner: false, tab: "today", jobs: [], engagement: [], reports: [], runs: [], metrics: [],
-              profile: null, packs: {}, downloads: null, filter: { status: "", country: "" }, ready: false };
+              profile: null, packs: {}, content: [], downloads: null, filter: { status: "", country: "" }, ready: false };
 
   // ---------- helpers ----------
   function h(tag, attrs, ...kids) {
@@ -391,6 +391,39 @@ form.grid label { display: grid; gap: 4px; font-size: 12px; color: var(--muted);
           : h("tr", {}, h("td", { colspan: "7", class: "meta" }, "Nothing here yet.")))))];
   }
 
+  const POST_LABEL = { draft: "Draft", approved: "Approved", posted: "Posted", skipped: "Skipped" };
+
+  async function setPostStatus(week, postId, status) {
+    if (!S.db || !S.owner) return;
+    const posts = (week.posts || []).map((p) => p.id === postId
+      ? { ...p, status, [status + "_at"]: new Date().toISOString() } : p);
+    try { await S.db.doc("content/" + week.id).update({ posts }); toast(POST_LABEL[status] + ": " + postId); }
+    catch (e) { toast("Could not save (" + (e && e.code || "error") + ")."); }
+  }
+
+  function viewContent() {
+    const weeks = S.content.filter((w) => Array.isArray(w.posts) && w.posts.length);
+    if (!weeks.length) return [h("div", { class: "notice" }, "Post drafts appear here: three a week, drafted every Monday evening from your verified experience.")];
+    const b = (label, cls, fn) => h("button", { class: "btn " + cls, onclick: fn }, label);
+    return [
+      h("p", { class: "sub" }, "Approve a draft, copy it into LinkedIn yourself at the suggested time, then mark it posted. Nothing is published automatically. Edit freely in LinkedIn before posting."),
+      ...weeks.map((w) => h("section", { class: "list" },
+        h("h2", {}, "Week of " + w.week),
+        ...w.posts.map((p) => {
+          const st = p.status || "draft";
+          const actions = !S.owner ? [] : st === "draft" ? [b("Skip", "ghost", () => setPostStatus(w, p.id, "skipped")), b("Approve", "gold", () => setPostStatus(w, p.id, "approved"))]
+            : st === "approved" ? [b("Back to draft", "ghost", () => setPostStatus(w, p.id, "draft")), b("Mark posted", "", () => setPostStatus(w, p.id, "posted"))]
+            : st === "skipped" ? [b("Restore", "ghost", () => setPostStatus(w, p.id, "draft"))] : [];
+          return h("article", { class: "draft" },
+            h("div", { class: "row" }, h("span", { class: "code" }, p.id), h("h3", {}, p.title || ""),
+              h("span", { style: "flex:1" }), h("span", { class: "pill " + (st === "posted" ? "s-applied" : st === "approved" ? "s-approved" : st === "skipped" ? "s-skipped" : "s-shortlisted") }, POST_LABEL[st] || st)),
+            h("p", { class: "meta" }, [p.day, p.time, p.pillar, p.format].filter(Boolean).join(" · ")),
+            h("p", { class: "quote", dir: "auto" }, p.body || ""),
+            h("div", { class: "row" }, h("button", { class: "btn ghost", onclick: () => copy(p.body || "", "Post copied") }, "Copy post"),
+              h("span", { style: "flex:1" }), ...actions));
+        })))];
+  }
+
   function viewEngagement() {
     const latest = S.engagement[0];
     if (!latest) return [h("div", { class: "notice" }, "Engagement drafts appear here after the 9 AM run: comments to post and people worth following. You post, comment and connect yourself.")];
@@ -468,7 +501,7 @@ form.grid label { display: grid; gap: 4px; font-size: 12px; color: var(--muted);
       view.replaceChildren(h("div", { class: "notice" }, "This desk needs Claude’s private storage. Open it while signed in to claude.ai."));
       return;
     }
-    const views = { today: viewToday, pipeline: viewPipeline, engagement: viewEngagement, growth: viewGrowth, activity: viewActivity };
+    const views = { today: viewToday, pipeline: viewPipeline, content: viewContent, engagement: viewEngagement, growth: viewGrowth, activity: viewActivity };
     const content = (views[S.tab] || viewToday)();
     if (!S.owner) content.unshift(h("div", { class: "notice warn" }, "Read-only view. Only the owner can approve jobs or save numbers."));
     view.replaceChildren(...[].concat(content).filter(Boolean));
@@ -493,6 +526,7 @@ form.grid label { display: grid; gap: 4px; font-size: 12px; color: var(--muted);
     db.collection("engagement").orderBy("date", "desc").limit(7).onSnapshot((s) => { S.engagement = docs(s); render(); }, onErr);
     db.collection("reports").orderBy("date", "desc").limit(12).onSnapshot((s) => { S.reports = docs(s); render(); }, onErr);
     db.collection("runs").orderBy("at", "desc").limit(30).onSnapshot((s) => { S.runs = docs(s); render(); }, onErr);
+    db.collection("content").orderBy("week", "asc").onSnapshot((s) => { S.content = docs(s); render(); }, onErr);
     db.collection("metrics").orderBy("date", "desc").limit(26).onSnapshot((s) => { S.metrics = docs(s); render(); }, onErr);
     db.doc("config/profile").onSnapshot((d) => { S.profile = d.exists ? d.data() : null; }, onErr);
   })();

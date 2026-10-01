@@ -107,6 +107,8 @@ textarea { width: 100%; resize: vertical; }
 .pack { display: grid; gap: 6px; border-top: 1px dashed var(--line); padding-top: 10px; }
 form.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; align-items: end; }
 form.grid label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
+form.grid label.wide { grid-column: 1 / -1; }
+form.grid textarea { min-height: 120px; font: inherit; }
 .prose { max-width: 70ch; }
 .prose p { margin: 6px 0; }
 .hint { font-size: 12px; color: var(--muted); }
@@ -153,7 +155,7 @@ form.grid label { display: grid; gap: 4px; font-size: 12px; color: var(--muted);
     leadership: "Leadership", technical: "Technical", qualifications: "Qualifications", progression: "Progression",
   };
   const S = { db: null, owner: false, tab: "today", jobs: [], engagement: [], reports: [], runs: [], metrics: [],
-              profile: null, packs: {}, content: [], recruiters: null, downloads: null, filter: { status: "", country: "" }, ready: false };
+              profile: null, packs: {}, content: [], finds: [], recruiters: null, downloads: null, filter: { status: "", country: "" }, ready: false };
 
   // ---------- helpers ----------
   function h(tag, attrs, ...kids) {
@@ -369,6 +371,63 @@ form.grid label { display: grid; gap: 4px; font-size: 12px; color: var(--muted);
       "", factsBlock(), "", APPLY_RULES].join("\n");
   }
 
+  const SEARCH_TITLES = ["Design Manager", "Senior Design Manager", "Head of Design Management", "Head of Technical Office",
+    "Technical Office Manager", "Design & Development Manager", "Development Manager", "Owner's Representative", "Interior Design Manager"];
+  const SEARCH_PLACES = ["Saudi Arabia", "United Arab Emirates", "Qatar", "Kuwait", "Bahrain", "Oman"];
+  const FIND_CAP = 15;
+  const linkedinJobId = (u) => { const m = /^https:\/\/(?:[a-z]{2,3}\.)?(?:www\.)?linkedin\.com\/jobs\/view\/(?:[^/?#]*?-)?(\d{6,})\/?(?:[?#].*)?$/i.exec(String(u || "").trim()); return m ? m[1] : null; };
+
+  function searchTask() {
+    return ["DAILY LINKEDIN EASY APPLY SEARCH (run every day at 8:30 AM Cairo time, before the 9 AM scout).",
+      "Use your browser, where I am already signed in to LinkedIn. Only read job listings; never apply, message, follow, connect, like, comment or post in this task.",
+      "1. Open LinkedIn Jobs. For each search title below, search in Saudi Arabia and the United Arab Emirates first, then Qatar, Kuwait, Bahrain and Oman, then Remote,",
+      "   with the filters \"Easy Apply\" ON and \"Date posted: Past week\". Titles: " + SEARCH_TITLES.join("; ") + ".",
+      "2. Keep only jobs that show the \"Easy Apply\" button (not \"Apply\" to an external site). Skip roles below manager level, Egypt on-site roles,",
+      "   and jobs outside design management, technical office, development, project or real-estate work. Skip anything asking for fees or WhatsApp contact.",
+      `3. For each kept job (at most ${FIND_CAP} per day, best fits first), open my Career Desk page: ${DESK_URL}, Today tab, section "Add a LinkedIn Easy Apply job",`,
+      "   and fill the form: title, company, city, country, posted date, the job link (https://www.linkedin.com/jobs/view/<number>/ with nothing after it),",
+      "   and paste the full job description text from the job page. Click \"Add job\". If the desk says it is already there, move on.",
+      "4. Stop at any CAPTCHA, sign-in prompt or security check and tell me. Work at a normal human pace; do not page through more than the first 2 result pages per search.",
+      "5. At the end, report how many jobs you added and how many you skipped (with the reason)."].join("\n");
+  }
+
+  function findForm() {
+    const form = h("form", { class: "grid", id: "find-form", onsubmit: async (e) => {
+      e.preventDefault();
+      if (!S.db || !S.owner) return;
+      const fd = new FormData(e.target);
+      const v = (k) => String(fd.get(k) || "").trim();
+      const id = linkedinJobId(v("url"));
+      if (!id) { toast("Use a LinkedIn job link: https://www.linkedin.com/jobs/view/<number>/"); return; }
+      const url = "https://www.linkedin.com/jobs/view/" + id + "/";
+      if (S.finds.some((f) => f.id === "LI-" + id) || S.jobs.some((j) => linkedinJobId(j.url) === id)) { toast("Already on the desk"); return; }
+      const body = { linkedin_job_id: id, url, title: v("title").slice(0, 200), employer: v("employer").slice(0, 200) || "Employer not stated",
+        city: v("city").slice(0, 100), country: v("country").slice(0, 100), posted: v("posted") || null,
+        description: v("description").slice(0, 20000), easy_apply: true, apply_method: "linkedin_easy_apply",
+        status: "new", found_at: new Date().toISOString(), source: "linkedin easy apply search (desktop app)" };
+      if (!body.title) { toast("Add the job title"); return; }
+      try { await S.db.doc("finds/LI-" + id).set(body); toast("Added: " + body.title); e.target.reset(); }
+      catch (err) { toast("Could not save (" + (err && err.code || "error") + ")."); }
+    } },
+      h("label", {}, "Job title", h("input", { name: "title", id: "find-title", required: true })),
+      h("label", {}, "Company", h("input", { name: "employer", id: "find-employer" })),
+      h("label", {}, "City", h("input", { name: "city", id: "find-city" })),
+      h("label", {}, "Country", h("input", { name: "country", id: "find-country" })),
+      h("label", {}, "Posted", h("input", { type: "date", name: "posted", id: "find-posted" })),
+      h("label", { class: "wide" }, "LinkedIn job link", h("input", { name: "url", id: "find-url", type: "url", required: true, placeholder: "https://www.linkedin.com/jobs/view/1234567890/" })),
+      h("label", { class: "wide" }, "Job description (paste the full text)", h("textarea", { name: "description", id: "find-description", required: true })),
+      h("button", { class: "btn", type: "submit", disabled: !S.owner }, "Add job"));
+    const waiting = S.finds.filter((f) => f.status === "new");
+    return h("section", { class: "draft" },
+      h("h3", {}, "Add a LinkedIn Easy Apply job"),
+      h("p", { class: "hint" }, "Job Scout keeps LinkedIn Easy Apply jobs only. Set this up once: in the Claude desktop app, create a scheduled task that runs every day at 8:30 AM "
+        + "and paste the search task as its instructions. It searches LinkedIn with the Easy Apply filter and adds each job here; the 9 AM scout scores them from the full description. "
+        + "You can also add one yourself."),
+      h("div", { class: "row" }, h("button", { class: "btn ghost", onclick: () => copy(searchTask(), "Easy Apply search task copied") }, "Copy daily Easy Apply search task")),
+      form,
+      h("p", { class: "meta" }, waiting.length ? `${waiting.length} added job${waiting.length === 1 ? "" : "s"} waiting for the next scout run: ` + waiting.map((f) => f.title).join(" · ") : "No added jobs waiting for scoring."));
+  }
+
   function viewToday() {
     const shortlist = S.jobs.filter((j) => (j.status || "shortlisted") === "shortlisted")
       .sort((a, b) => (b.match || 0) - (a.match || 0));
@@ -392,6 +451,7 @@ form.grid label { display: grid; gap: 4px; font-size: 12px; color: var(--muted);
         h("div", { class: "row" }, h("button", { class: "btn gold", onclick: () => copy(prompt, "Apply instructions copied") }, "Copy apply instructions")),
         h("div", { class: "list" }, approvedAll.map((j) => jobCard(j, actionsFor(j))))));
     }
+    parts.push(findForm());
     parts.push(h("h2", {}, "Waiting for your decision"));
     if (!shortlist.length) parts.push(h("div", { class: "notice" }, "No jobs waiting for a decision."));
     parts.push(h("div", { class: "list" }, shortlist.map((j) => jobCard(j, actionsFor(j)))));
@@ -641,7 +701,7 @@ form.grid label { display: grid; gap: 4px; font-size: 12px; color: var(--muted);
       h("tbody", {}, S.runs.length ? S.runs.map((r) => h("tr", {}, h("td", { class: "meta" }, String(r.at || "").replace("T", " ").slice(0, 16)),
         h("td", {}, r.type || ""), h("td", {}, r.summary || "")))
         : h("tr", {}, h("td", { colspan: "3", class: "meta" }, "No runs yet."))))),
-      h("p", { class: "hint" }, "Scout: daily 9 AM Cairo · Growth report: Mondays 7 PM Cairo · Applications: when you run the copied instructions in the Claude desktop app.")];
+      h("p", { class: "hint" }, "Easy Apply search: daily 8:30 AM (desktop app) · Scout: daily 9 AM Cairo · Growth report: Mondays 7 PM Cairo · Applications: when you run the copied instructions in the Claude desktop app.")];
   }
 
   function render() {
@@ -655,7 +715,10 @@ form.grid label { display: grid; gap: 4px; font-size: 12px; color: var(--muted);
     const views = { today: viewToday, pipeline: viewPipeline, content: viewContent, recruiters: viewRecruiters, analytics: viewAnalytics, engagement: viewEngagement, growth: viewGrowth, activity: viewActivity };
     const content = (views[S.tab] || viewToday)();
     if (!S.owner) content.unshift(h("div", { class: "notice warn" }, "Read-only view. Only the owner can approve jobs or save numbers."));
+    // Keep unsent form text when live data re-renders the page.
+    const kept = [...view.querySelectorAll("form input[id], form textarea[id], form select[id]")].filter((el) => el.value && el.value !== el.defaultValue).map((el) => [el.id, el.value]);
     view.replaceChildren(...[].concat(content).filter(Boolean));
+    for (const [id, value] of kept) { const el = document.getElementById(id); if (el) el.value = value; }
   }
 
   // ---------- boot ----------
@@ -679,6 +742,7 @@ form.grid label { display: grid; gap: 4px; font-size: 12px; color: var(--muted);
     db.collection("runs").orderBy("at", "desc").limit(30).onSnapshot((s) => { S.runs = docs(s); render(); }, onErr);
     db.collection("content").orderBy("week", "asc").onSnapshot((s) => { S.content = docs(s); render(); }, onErr);
     db.doc("directory/recruiters").onSnapshot((d) => { S.recruiters = d.exists ? d.data() : null; render(); }, onErr);
+    db.collection("finds").orderBy("found_at", "desc").limit(60).onSnapshot((s) => { S.finds = docs(s); render(); }, onErr);
     db.collection("metrics").orderBy("date", "desc").limit(26).onSnapshot((s) => { S.metrics = docs(s); render(); }, onErr);
     db.doc("config/profile").onSnapshot((d) => { S.profile = d.exists ? d.data() : null; }, onErr);
   })();

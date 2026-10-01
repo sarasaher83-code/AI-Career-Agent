@@ -23,4 +23,9 @@ For every `jobs/*` document with `status: "approved"` and no `pack_ready: true`:
    ArtifactData `set` to `packs/<code>` (use `file_path`).
 6. `update` the job (pin `if_version`) with `pack_ready: true`, `apply_method` if newly known, and a history entry
    `{at, event: "pack_ready", note: "CV + cover letter built"}`.
-7. Delete the temp directory. Add "N packs built" to the run summary.
+7. **Interview prep:** when a job reaches `status: "applied"` and its pack has no file whose kind starts with
+   "Interview prep", build a role-specific prep with `python -m cloud.interview_prep` (format in that file's docstring;
+   start from the sections of the general design-management prep: introduction, what the role will test, likely questions
+   with answers from verified highlights, honest gap answers, practical answers, questions to ask). Add only the PDF to
+   the pack (keep the pack under 250,000 bytes) and update the pack with `if_version`.
+8. Delete the temp directory. Add "N packs built" to the run summary.

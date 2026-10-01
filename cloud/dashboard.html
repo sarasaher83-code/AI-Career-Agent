@@ -306,10 +306,11 @@ form.grid label { display: grid; gap: 4px; font-size: 12px; color: var(--muted);
     const b = (label, cls, fn) => h("button", { class: "btn " + cls, onclick: fn }, label);
     if (st === "shortlisted") return [
       b("Skip", "ghost", () => setStatus(job, "skipped")),
-      b(job.easy_apply ? "Approve & apply" : "Approve", "gold", () => setStatus(job, "approved", "approved on dashboard")),
+      b("Approve & apply", "gold", () => setStatus(job, "approved", "approved on dashboard")),
     ];
     if (st === "approved" || st === "applying") return [
       b("Undo", "ghost", () => setStatus(job, "shortlisted", "approval withdrawn")),
+      b("Needs you", "ghost", () => setStatus(job, "needs_you", "marked by the apply task or by you")),
       b("Mark applied", "", () => setStatus(job, "applied", "marked on dashboard")),
     ];
     if (st === "needs_you" || st === "failed") return [
@@ -319,59 +320,77 @@ form.grid label { display: grid; gap: 4px; font-size: 12px; color: var(--muted);
     return [];
   }
 
-  function applyPrompt(approved) {
+  const DESK_URL = "https://claude.ai/artifact/YHCwoZk1vSTyqTvgLqgBXP";
+
+  function factsBlock() {
     const p = S.profile || {};
     const id = p.identity || {};
     const m = p.headline_metrics || {};
-    const lines = approved.slice(0, DAILY_CAP).map((j) => `- ${j.code}: ${j.title} — ${j.employer} (${place(j)}) ${j.url || ""}`);
     return [
-      "Apply to these approved LinkedIn Easy Apply jobs for me, in your browser, where I am signed in to LinkedIn:",
-      ...lines,
-      "",
-      "Rules:",
-      `1. At most ${DAILY_CAP} applications today, one at a time, at a normal human pace.`,
-      "2. Use only these verified facts. Never invent or estimate anything:",
-      `   Name: ${id.name || ""} · Email: ${id.email || ""} · Phone: ${id.phone || ""} · Based in: ${id.base || ""}`,
-      `   Current title: Head of Design Management Operations & Technical Office, MENA Development & Real Estate Investment (Riyadh; remote)`,
-      `   Total experience: ${m.years_experience || ""} years · Management: ${m.years_management || ""} years · Nationality: ${id.nationality || ""}`,
-      "   Education: Ph.D. candidate (Mansoura University, expected 2027); M.Sc. Architecture, Tanta University (2015); B.Sc. Architectural Engineering, Mansoura University (2005)",
-      "   Languages: Arabic (native), English (professional fluency)",
-      "3. Use the résumé already saved in my LinkedIn account.",
-      "4. If a question can't be answered from these facts (salary, notice period, licence numbers, years of a specific tool, anything else),",
-      "   do NOT answer it. Leave that application unsubmitted and report it as NEEDS YOU with the question text.",
-      "5. If a CAPTCHA, login prompt or company website (not Easy Apply) appears, stop that application and report it.",
-      "6. Never message, follow, connect, like or comment on anything.",
-      "7. At the end, list each job code with APPLIED, NEEDS YOU (with the question), or FAILED (with the reason).",
+      "VERIFIED FACTS (the only answers you may give; never invent or estimate anything):",
+      `- Name: ${id.name || ""} · Email: ${id.email || ""} · Phone: ${id.phone || ""} · Location: ${id.base || ""}, ready to relocate`,
+      "- Current title: Head of Design Management Operations & Technical Office, MENA Development & Real Estate Investment (Riyadh; remote), since Aug 2023",
+      `- Total experience: ${m.years_experience || ""} years · Management: ${m.years_management || ""} years · Nationality: ${id.nationality || ""}`,
+      "- Visa: requires employer sponsorship · Availability: as soon as visa and residency procedures are completed",
+      "- Salary question: \"Negotiable, in line with the role scope and local market\" (if a number is required, the application is NEEDS YOU)",
+      "- Education: Ph.D. candidate, Mansoura University (expected 2027); M.Sc. Architecture, Tanta University (2015); B.Sc. Architectural Engineering, Mansoura University (2005)",
+      "- Languages: Arabic (native), English (professional fluency)",
+      "- Saudi Council of Engineers: not registered, eligible",
     ].join("\n");
+  }
+
+  const APPLY_RULES = [
+    "HOW TO APPLY, by the job's apply method:",
+    "- LinkedIn Easy Apply: use the résumé already saved in my LinkedIn account.",
+    "- Workable form or another public form with no account: fill it from the verified facts; attach my tailored CV for that job (download it on the dashboard with \"Show CV and cover letter\" → CV (PDF), then upload it from Downloads). If the upload does not work, do not submit: NEEDS YOU.",
+    "- Company portal that needs an account (GulfTalent, Workday, Taleo, SuccessFactors, Oracle): only if I am already signed in to it in this browser. Never create an account and never type a password. Otherwise NEEDS YOU.",
+    "- Link to a copy on another site (aggregator): find the original posting first; if you cannot, NEEDS YOU.",
+    "",
+    "RULES:",
+    `1. At most ${DAILY_CAP} submitted applications per day, one at a time, at a normal human pace.`,
+    "2. If any question cannot be answered from the verified facts, do NOT submit that application: NEEDS YOU, with the question text.",
+    "3. Stop that application at any CAPTCHA, sign-in prompt, identity or security check: NEEDS YOU.",
+    "4. Never message, follow, connect, like, comment or post anything.",
+    "5. After each job, go back to the Career Desk page and click its button: \"Mark applied\" if submitted, \"Needs you\" otherwise.",
+    "6. At the end, give me a list: each job code with APPLIED, NEEDS YOU (with the reason or question) or FAILED (with the reason).",
+  ].join("\n");
+
+  function applyPrompt(approved) {
+    const lines = approved.slice(0, DAILY_CAP).map((j) => `- ${j.code}: ${j.title} — ${j.employer} (${place(j)}) · apply method: ${METHOD_LABEL[j.apply_method] || "not checked"} · ${j.url || ""}`);
+    return ["Apply to these jobs I approved, in your browser, where I am signed in.", `Career Desk page: ${DESK_URL} (Today tab).`, "", ...lines, "",
+            factsBlock(), "", APPLY_RULES].join("\n");
+  }
+
+  function standingTask() {
+    return ["DAILY AUTO-APPLY (run every day at 10:00 AM Cairo time).",
+      `1. Open my Career Desk page in your browser: ${DESK_URL} and go to the Today tab.`,
+      "2. Read the section \"Approved to apply\". If it lists no jobs, stop and report \"Nothing to apply today\".",
+      "3. For each listed job (at most " + DAILY_CAP + "), open its job link and apply as described below.",
+      "", factsBlock(), "", APPLY_RULES].join("\n");
   }
 
   function viewToday() {
     const shortlist = S.jobs.filter((j) => (j.status || "shortlisted") === "shortlisted")
       .sort((a, b) => (b.match || 0) - (a.match || 0));
     const approvedAll = S.jobs.filter((j) => j.status === "approved");
-    const approved = approvedAll.filter((j) => j.easy_apply || j.apply_method === "linkedin_easy_apply");
-    const selfApply = approvedAll.filter((j) => !approved.includes(j));
     const lastScout = S.runs.find((r) => r.type === "scout");
     const parts = [];
     parts.push(h("section", { class: "notice" },
       h("h2", {}, "Today’s shortlist"),
       h("p", { class: "sub" }, lastScout ? `Last scout run ${String(lastScout.at || "").replace("T", " ").slice(0, 16)} UTC: ${lastScout.summary || ""}`
         : "The first scout run fills this list. Each job shows its match score, the evidence behind it, and anything the advert does not state.")));
-    if (approved.length) {
-      const prompt = applyPrompt(approved);
+    parts.push(h("section", { class: "draft" },
+      h("h3", {}, "Automatic applying"),
+      h("p", { class: "hint" }, "Set this up once: in the Claude desktop app, create a scheduled task that runs every day at 10:00 AM and paste this text as its instructions. "
+        + "Each day it applies to every job in “Approved to apply” below (at most " + DAILY_CAP + "), then marks each one here. To apply right away, use “Copy apply instructions” in a new task instead."),
+      h("div", { class: "row" }, h("button", { class: "btn ghost", onclick: () => copy(standingTask(), "Daily auto-apply task copied") }, "Copy daily auto-apply task"))));
+    if (approvedAll.length) {
+      const prompt = applyPrompt(approvedAll);
       parts.push(h("section", { class: "draft" },
-        h("h3", {}, `${approved.length} job${approved.length > 1 ? "s" : ""} approved to apply`),
-        h("p", { class: "hint" }, "Open the Claude desktop app, start a new task, paste these instructions, and let it apply in its browser. "
-          + "Then mark each job here as applied, or leave it for tomorrow."),
+        h("h3", {}, `Approved to apply (${approvedAll.length})`),
+        h("p", { class: "hint" }, "These are applied to by the daily task, or now with the instructions below."),
         h("div", { class: "row" }, h("button", { class: "btn gold", onclick: () => copy(prompt, "Apply instructions copied") }, "Copy apply instructions")),
-        h("details", {}, h("summary", { class: "hint" }, "Show the instructions"), h("pre", { class: "quote", style: "white-space:pre-wrap;overflow-x:auto" }, prompt))));
-    }
-    if (selfApply.length) {
-      parts.push(h("section", { class: "draft" },
-        h("h3", {}, `${selfApply.length} approved job${selfApply.length > 1 ? "s" : ""} to submit yourself`),
-        h("p", { class: "hint" }, "These are not LinkedIn Easy Apply, so automatic applying does not cover them. Each has a tailored CV and cover letter: "
-          + "download them, open the job, submit, then tap Mark applied."),
-        h("div", { class: "list" }, selfApply.map((j) => jobCard(j, actionsFor(j))))));
+        h("div", { class: "list" }, approvedAll.map((j) => jobCard(j, actionsFor(j))))));
     }
     parts.push(h("h2", {}, "Waiting for your decision"));
     if (!shortlist.length) parts.push(h("div", { class: "notice" }, "No jobs waiting for a decision."));

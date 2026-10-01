@@ -378,7 +378,7 @@ form.grid textarea { min-height: 120px; font: inherit; }
   const linkedinJobId = (u) => { const m = /^https:\/\/(?:[a-z]{2,3}\.)?(?:www\.)?linkedin\.com\/jobs\/view\/(?:[^/?#]*?-)?(\d{6,})\/?(?:[?#].*)?$/i.exec(String(u || "").trim()); return m ? m[1] : null; };
 
   function searchTask() {
-    return ["DAILY LINKEDIN EASY APPLY SEARCH (run every day at 8:30 AM Cairo time, before the 9 AM scout).",
+    return ["DAILY LINKEDIN EASY APPLY SEARCH (run every day at 8:30 AM Cairo time, before the 9:20 AM scout).",
       "Use your browser, where I am already signed in to LinkedIn. Only read job listings; never apply, message, follow, connect, like, comment or post in this task.",
       "1. Open LinkedIn Jobs. For each search title below, search in Saudi Arabia and the United Arab Emirates first, then Qatar, Kuwait, Bahrain and Oman, then Remote,",
       "   with the filters \"Easy Apply\" ON and \"Date posted: Past week\". Titles: " + SEARCH_TITLES.join("; ") + ".",
@@ -421,7 +421,7 @@ form.grid textarea { min-height: 120px; font: inherit; }
     return h("section", { class: "draft" },
       h("h3", {}, "Add a LinkedIn Easy Apply job"),
       h("p", { class: "hint" }, "Job Scout keeps LinkedIn Easy Apply jobs only. Set this up once: in the Claude desktop app, create a scheduled task that runs every day at 8:30 AM "
-        + "and paste the search task as its instructions. It searches LinkedIn with the Easy Apply filter and adds each job here; the 9 AM scout scores them from the full description. "
+        + "and paste the search task as its instructions. It searches LinkedIn with the Easy Apply filter and adds each job here; the 9:20 AM scout scores them from the full description. "
         + "You can also add one yourself."),
       h("div", { class: "row" }, h("button", { class: "btn ghost", onclick: () => copy(searchTask(), "Easy Apply search task copied") }, "Copy daily Easy Apply search task")),
       form,
@@ -701,7 +701,7 @@ form.grid textarea { min-height: 120px; font: inherit; }
       h("tbody", {}, S.runs.length ? S.runs.map((r) => h("tr", {}, h("td", { class: "meta" }, String(r.at || "").replace("T", " ").slice(0, 16)),
         h("td", {}, r.type || ""), h("td", {}, r.summary || "")))
         : h("tr", {}, h("td", { colspan: "3", class: "meta" }, "No runs yet."))))),
-      h("p", { class: "hint" }, "Easy Apply search: daily 8:30 AM (desktop app) · Scout: daily 9 AM Cairo · Growth report: Mondays 7 PM Cairo · Applications: when you run the copied instructions in the Claude desktop app.")];
+      h("p", { class: "hint" }, "Easy Apply search: daily 8:30 AM (desktop app) · Scout: daily 9:20 AM Cairo · Growth report: Mondays 7 PM Cairo · Applications: when you run the copied instructions in the Claude desktop app.")];
   }
 
   function render() {

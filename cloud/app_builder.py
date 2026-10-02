@@ -79,7 +79,7 @@ def _contact_block(doc: Document, identity: dict, headline: str) -> None:
     title.add_run(headline).font.size = Pt(11)
     contact = doc.add_paragraph()
     parts = [identity.get("base", ""), identity.get("phone", ""), identity.get("email", ""),
-             identity.get("linkedin", "").replace("https://www.", "")]
+             identity.get("linkedin", "").replace("https://www.", ""), identity.get("portfolio", "").replace("https://", "")]
     contact.add_run(" | ".join(p for p in parts if p)).font.size = Pt(9.5)
 
 
@@ -180,6 +180,8 @@ def build_letter(profile, tailoring: dict, out: Path) -> Path:
         p.paragraph_format.space_after = Pt(8)
     doc.add_paragraph(letter.get("closing", "Kind regards,"))
     doc.add_paragraph(raw["identity"]["name"])
+    if raw["identity"].get("portfolio"):
+        doc.add_paragraph(f"Portfolio: {raw['identity']['portfolio']}").runs[0].font.size = Pt(9.5)
     path = out / f"{tailoring['code']}_Cover_Letter_{raw['identity']['name'].replace(' ', '_')}.docx"
     doc.save(path)
     return path

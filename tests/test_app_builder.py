@@ -30,6 +30,7 @@ def test_builds_cv_and_letter_with_verbatim_highlights(tmp_path, profile):
     assert "Harbour Tower" in text and "7777" not in text         # private preferences never printed
     letter = "\n".join(p.text for p in Document(files[1]).paragraphs)
     assert "Re: Senior Design Manager, Example Co" in letter
+    assert "candidate.example.org" in text and "Portfolio: https://candidate.example.org" in letter
 
 
 def test_invented_claims_are_blocked(profile):

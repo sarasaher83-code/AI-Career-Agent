@@ -331,6 +331,7 @@ form.grid textarea { min-height: 120px; font: inherit; }
     return [
       "VERIFIED FACTS (the only answers you may give; never invent or estimate anything):",
       `- Name: ${id.name || ""} · Email: ${id.email || ""} · Phone: ${id.phone || ""} · Location: ${id.base || ""}, ready to relocate`,
+      `- LinkedIn: ${id.linkedin || ""}` + (id.portfolio ? ` · Portfolio / website: ${id.portfolio} (use it for any "website", "portfolio" or "personal link" field)` : ""),
       "- Current title: Head of Design Management Operations & Technical Office, MENA Development & Real Estate Investment (Riyadh; remote), since Aug 2023",
       `- Total experience: ${m.years_experience || ""} years · Management: ${m.years_management || ""} years · Nationality: ${id.nationality || ""}`,
       "- Visa: requires employer sponsorship · Availability: as soon as visa and residency procedures are completed",
@@ -656,6 +657,22 @@ form.grid textarea { min-height: 120px; font: inherit; }
     ];
   }
 
+  function portfolioTask() {
+    const id = (S.profile || {}).identity || {};
+    const url = id.portfolio || "";
+    return ["ADD MY PORTFOLIO TO MY LINKEDIN PROFILE (one time). Use your browser, where I am signed in to LinkedIn.",
+      `My portfolio website: ${url}`,
+      `My portfolio PDF: ${url ? url.replace(/\/$/, "") + "/Sara_ElKhoreby_Portfolio.pdf" : ""} (download it first, then upload it from Downloads)`,
+      "Before you start: open LinkedIn → Settings → Visibility → \"Share profile updates with your network\" and turn it OFF, so these edits do not notify my network.",
+      "1. Open my profile → Contact info (pencil) → Website: add the portfolio website, type \"Portfolio\". Save.",
+      "2. Profile → Add section → Recommended → Add featured → Add a link: the portfolio website. Title: \"Portfolio 2026: Design Management & Technical Office\". "
+        + "Description: \"Diriyah community centres and parks, MENA 51, MENA Rise and the delivered MENA residential portfolio.\" Save.",
+      "3. Add featured → Add media: upload the portfolio PDF. Title: \"Portfolio 2026 (PDF)\". Save.",
+      "4. If any of these already exist, update them instead of adding a duplicate. Change nothing else on my profile.",
+      "5. Stop at any sign-in prompt, CAPTCHA or security check and tell me. Never post, message, connect, follow, like or comment.",
+      "6. At the end, tell me which of steps 1–3 were done, and turn \"Share profile updates with your network\" back to how it was."].join("\n");
+  }
+
   function viewGrowth() {
     const report = S.reports[0];
     const form = h("form", { class: "grid", id: "metrics-form", onsubmit: async (e) => {
@@ -675,7 +692,12 @@ form.grid textarea { min-height: 120px; font: inherit; }
       h("label", {}, "Followers", h("input", { type: "number", min: "0", name: "followers", id: "m-followers" })),
       h("button", { class: "btn", type: "submit", disabled: !S.owner }, "Save numbers"));
     const recent = S.metrics.slice(0, 8);
+    const portfolio = ((S.profile || {}).identity || {}).portfolio;
     return [
+      portfolio ? h("section", { class: "draft" }, h("h3", {}, "Portfolio on LinkedIn"),
+        h("p", { class: "hint" }, "Adds your portfolio website to Contact info and adds the website and the PDF to Featured. Paste this into a new task in the Claude desktop app."),
+        h("p", {}, h("a", { href: portfolio, target: "_blank", rel: "noopener" }, portfolio)),
+        h("div", { class: "row" }, h("button", { class: "btn ghost", onclick: () => copy(portfolioTask(), "Portfolio task copied") }, "Copy LinkedIn portfolio task"))) : null,
       h("section", { class: "draft" }, h("h3", {}, "This week’s LinkedIn numbers"),
         h("p", { class: "hint" }, "Copy them from LinkedIn → your profile → Analytics before Monday 7 PM. The report compares week on week."), form,
         recent.length ? h("div", { class: "table-wrap" }, h("table", {},
